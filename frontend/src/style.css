@@ -1,0 +1,440 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  font-family: "Inter", sans-serif;
+  color: #172033;
+  background: #f5f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* BRAND SECTION */
+
+.login-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 55px 65px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 80% 20%, #164b64 0, transparent 35%),
+    linear-gradient(145deg, #071827, #0c2638 65%, #10394b);
+}
+
+.login-brand::after {
+  content: "";
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  right: -180px;
+  bottom: -170px;
+  border: 1px solid rgba(98, 217, 255, 0.18);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 45px rgba(98, 217, 255, 0.04),
+    0 0 0 90px rgba(98, 217, 255, 0.03);
+}
+
+.brand-logo {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  color: #071827;
+  background: #62d9ff;
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.login-brand h1 {
+  margin-top: 17px;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.brand-subtitle {
+  margin-top: 7px;
+  color: #8ba9bc;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+  margin: auto 0;
+}
+
+.brand-tag,
+.welcome-label {
+  color: #13a9d2;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.brand-content h2 {
+  margin-top: 22px;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 1.2;
+  letter-spacing: -2px;
+}
+
+.brand-content p {
+  max-width: 420px;
+  margin-top: 22px;
+  color: #a9bdcc;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.brand-footer {
+  position: relative;
+  z-index: 1;
+  color: #7892a5;
+  font-size: 11px;
+}
+
+.mobile-logo {
+  display: none;
+}
+
+/* LOGIN FORM */
+
+.login-form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 45px;
+  background: #f7f9fc;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 410px;
+}
+
+.login-form-container h2 {
+  margin-top: 15px;
+  color: #142336;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.login-description {
+  margin-top: 10px;
+  margin-bottom: 38px;
+  color: #8490a0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.form-group {
+  margin-bottom: 23px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 10px;
+  color: #29384a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-group input {
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+  border: 1px solid #dce3eb;
+  border-radius: 8px;
+  outline: none;
+  color: #172033;
+  background: #ffffff;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.form-group input::placeholder {
+  color: #a9b2bf;
+}
+
+.form-group input:focus {
+  border-color: #13a9d2;
+  box-shadow: 0 0 0 3px rgba(19, 169, 210, 0.1);
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 65px;
+}
+
+.show-password {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  border: none;
+  color: #1595b8;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.login-error {
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  color: #b42318;
+  background: #fff1f0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.login-button {
+  width: 100%;
+  height: 51px;
+  margin-top: 5px;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #087f9f;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.login-button:hover {
+  background: #066b87;
+  transform: translateY(-1px);
+}
+
+.login-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+}
+
+.login-security {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 30px;
+  color: #8995a4;
+  font-size: 10px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-brand {
+    display: none;
+  }
+
+  .login-form-section {
+    min-height: 100vh;
+    padding: 30px 22px;
+  }
+
+  .mobile-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 55px;
+    color: #142336;
+    font-size: 19px;
+  }
+
+  .mobile-logo .brand-logo {
+    width: 39px;
+    height: 39px;
+    font-size: 21px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form-container h2 {
+    font-size: 25px;
+  }
+
+  .login-description {
+    margin-bottom: 30px;
+  }
+}
+
+/* ==============================
+   PROCUREPRO LOGIN ANIMATIONS
+============================== */
+
+/* Animasi dasar */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(35px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floating {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.12);
+  }
+}
+
+/* Panel kiri */
+.login-brand {
+  animation: fadeIn 0.8s ease both;
+}
+
+/* Logo */
+.brand-logo {
+  animation: slideUp 0.7s ease both;
+}
+
+/* Branding */
+.login-brand h1 {
+  animation: slideUp 0.8s ease 0.15s both;
+}
+
+.brand-subtitle {
+  animation: slideUp 0.8s ease 0.25s both;
+}
+
+.brand-content {
+  animation: slideUp 1s ease 0.3s both;
+}
+
+/* Ornamen background */
+.login-brand::after {
+  animation:
+    floating 7s ease-in-out infinite,
+    glow 5s ease-in-out infinite;
+}
+
+/* Form login */
+.login-form-container {
+  animation: slideRight 0.9s ease both;
+}
+
+/* Input */
+.form-group {
+  animation: slideUp 0.7s ease both;
+}
+
+.form-group:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+/* Tombol */
+.login-button {
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(8, 127, 159, 0.25);
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+/* Input focus */
+.form-group input {
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+.form-group input:focus {
+  transform: translateY(-1px);
+}
+
+/* Mobile */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
