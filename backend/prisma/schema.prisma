@@ -38,3 +38,30 @@ model User {
   @@index([roleId])
   @@map("users")
 }
+
+enum VendorStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+model Vendor {
+  id             Int          @id @default(autoincrement())
+  vendorCode     String       @unique @db.VarChar(50)
+  companyName    String       @db.VarChar(200)
+  contactName    String?      @db.VarChar(150)
+  email          String?      @unique @db.VarChar(150)
+  phone          String?      @db.VarChar(30)
+  taxNumber      String?      @db.VarChar(50)
+  address        String?      @db.Text
+  city           String?      @db.VarChar(100)
+  country        String?      @db.VarChar(100)
+  website        String?      @db.VarChar(200)
+  status         VendorStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([companyName])
+  @@index([status])
+  @@map("vendors")
+}

@@ -8,14 +8,24 @@ const stats = [
     change: "+12.8%",
     icon: "◈",
   },
-  { label: "Active Vendors", value: "128", change: "+8.2%", icon: "♙" },
+  {
+    label: "Active Vendors",
+    value: "128",
+    change: "+8.2%",
+    icon: "♙",
+  },
   {
     label: "Pending Approvals",
     value: "24",
     change: "Perlu tindakan",
     icon: "◷",
   },
-  { label: "Purchase Orders", value: "86", change: "+5.4%", icon: "▤" },
+  {
+    label: "Purchase Orders",
+    value: "86",
+    change: "+5.4%",
+    icon: "▤",
+  },
 ];
 
 const orders = [
@@ -111,11 +121,29 @@ interface DashboardProps {
     role: string;
   };
   onLogout: () => void;
+  onNavigate: (page: string) => void;
 }
 
-export default function Dashboard({ user, onLogout }: DashboardProps) {
+export default function Dashboard({
+  user,
+  onLogout,
+  onNavigate,
+}: DashboardProps) {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [search, setSearch] = useState("");
+
+  const handleMenuClick = (label: string) => {
+    setActiveMenu(label);
+
+    if (label === "Vendors") {
+      onNavigate("vendors");
+      return;
+    }
+
+    if (label === "Dashboard") {
+      onNavigate("dashboard");
+    }
+  };
 
   return (
     <div className="dashboard-layout">
@@ -141,14 +169,18 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
           {menuGroups.map((group) => (
             <div className="menu-group" key={group.title}>
               <p className="menu-heading">{group.title}</p>
+
               {group.items.map((item) => (
                 <button
                   key={item.label}
-                  className={`sidebar-link ${activeMenu === item.label ? "active" : ""}`}
-                  onClick={() => setActiveMenu(item.label)}
+                  className={`sidebar-link ${
+                    activeMenu === item.label ? "active" : ""
+                  }`}
+                  onClick={() => handleMenuClick(item.label)}
                 >
                   <span className="sidebar-icon">{item.icon}</span>
                   <span>{item.label}</span>
+
                   {item.count && (
                     <span className="menu-count">{item.count}</span>
                   )}
@@ -160,18 +192,25 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
         <div className="sidebar-bottom">
           <button
-            className={`sidebar-link ${activeMenu === "Settings" ? "active" : ""}`}
+            className={`sidebar-link ${
+              activeMenu === "Settings" ? "active" : ""
+            }`}
             onClick={() => setActiveMenu("Settings")}
           >
             <span className="sidebar-icon">⚙</span>
             Settings
           </button>
+
           <div className="sidebar-user">
-            <div className="user-avatar">A</div>
+            <div className="user-avatar">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+
             <div className="sidebar-user-info">
               <strong>{user.name}</strong>
-              <span>Super Administrator</span>
+              <span>{user.role || "Administrator"}</span>
             </div>
+
             <button className="logout-button" onClick={onLogout} title="Logout">
               ⇥
             </button>
@@ -186,6 +225,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             <span>/</span>
             <strong>{activeMenu}</strong>
           </div>
+
           <div className="topbar-actions">
             <label className="dashboard-search">
               <span>⌕</span>
@@ -197,11 +237,19 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
               />
               <kbd>⌘ K</kbd>
             </label>
-            <button className="notification-button" title="Notifications">
+
+            <button
+              className="notification-button"
+              title="Notifications"
+              type="button"
+            >
               ♧<i />
             </button>
+
             <div className="topbar-profile">
-              <div className="user-avatar">A</div>
+              <div className="user-avatar">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
               <div>
                 <strong>{user.name}</strong>
                 <span>Administrator</span>
@@ -214,12 +262,13 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         <div className="dashboard-content">
           <section className="dashboard-welcome">
             <div>
-              <p className="eyebrow">MONDAY, 09 NOVEMBER 2026</p>
-              <h1>Good afternoon, {user.name.split(" ")[0]} </h1>
+              <p className="eyebrow">TUESDAY, 10 NOVEMBER 2026</p>
+              <h1>Good afternoon, {user.name.split(" ")[0]}</h1>
               <p>
                 Berikut ringkasan aktivitas procurement perusahaan hari ini.
               </p>
             </div>
+
             <button
               className="primary-action"
               onClick={() => setActiveMenu("Requisitions")}
@@ -235,7 +284,9 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <span>{stat.label}</span>
                   <div className="stat-icon">{stat.icon}</div>
                 </div>
+
                 <h2>{stat.value}</h2>
+
                 <div className="stat-card-bottom">
                   <span className="stat-change">{stat.change}</span>
                   <span>vs last month</span>
@@ -251,6 +302,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <h3>Procurement Overview</h3>
                   <p>Monthly procurement spending</p>
                 </div>
+
                 <select aria-label="Select period" defaultValue="2026">
                   <option value="2026">Year 2026</option>
                   <option value="2025">Year 2025</option>
@@ -272,15 +324,19 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <span>200 jt</span>
                   <span>0</span>
                 </div>
+
                 <div className="chart-bars">
                   {[38, 52, 44, 68, 56, 78, 62, 88, 70, 95, 76, 84].map(
                     (height, index) => (
                       <div className="chart-column" key={index}>
                         <div
-                          className={`chart-bar ${index === 9 ? "highlight" : ""}`}
+                          className={`chart-bar ${
+                            index === 9 ? "highlight" : ""
+                          }`}
                           style={{ height: `${height}%` }}
                           title={`${height}%`}
                         />
+
                         <span>
                           {
                             [
@@ -312,12 +368,16 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <h3>Requisition Status</h3>
                   <p>Current request overview</p>
                 </div>
-                <button className="more-button">···</button>
+                <button className="more-button" type="button">
+                  ···
+                </button>
               </div>
+
               <div className="status-total">
                 <strong>156</strong>
                 <span>Total Requests</span>
               </div>
+
               <div className="status-progress">
                 <div className="progress-track">
                   <span className="progress-approved" />
@@ -325,6 +385,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <span className="progress-rejected" />
                 </div>
               </div>
+
               <div className="status-legend">
                 <div>
                   <i className="legend-dot approved-dot" />
@@ -342,6 +403,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <strong>16</strong>
                 </div>
               </div>
+
               <button
                 className="text-action"
                 onClick={() => setActiveMenu("Requisitions")}
@@ -358,6 +420,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <h3>Recent Purchase Orders</h3>
                   <p>Monitor your latest procurement transactions</p>
                 </div>
+
                 <button
                   className="text-action"
                   onClick={() => setActiveMenu("Purchase Orders")}
@@ -365,6 +428,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   View all →
                 </button>
               </div>
+
               <div className="table-scroll">
                 <table className="orders-table">
                   <thead>
@@ -376,6 +440,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                       <th>STATUS</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {orders
                       .filter((order) =>
@@ -410,8 +475,11 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                   <h3>Recent Activity</h3>
                   <p>Latest updates across workspace</p>
                 </div>
-                <button className="more-button">···</button>
+                <button className="more-button" type="button">
+                  ···
+                </button>
               </div>
+
               <div className="activity-list">
                 {activities.map((activity, index) => (
                   <div className="activity-item" key={index}>

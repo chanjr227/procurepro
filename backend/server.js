@@ -1,22 +1,25 @@
 const express = require("express");
 const cors = require("cors");
 const prisma = require("./src/lib/prisma");
+
 const authRoutes = require("./src/routes/authRoutes");
+const vendorRoutes = require("./src/routes/vendorRoutes");
 
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Middleware HARUS sebelum routes
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Routes API
 app.use("/api/auth", authRoutes);
+app.use("/api/vendors", vendorRoutes);
 
-// Route utama
+// Homepage
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -24,7 +27,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Tes koneksi database
+// Database health check
 app.get("/api/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -35,17 +38,15 @@ app.get("/api/health", async (req, res) => {
       database: "procurepro_db",
     });
   } catch (error) {
-    console.error("Database connection error:", error);
+    console.error(error);
 
     res.status(500).json({
       success: false,
       message: "Koneksi database gagal!",
-      error: error.message,
     });
   }
 });
 
-// Menjalankan server
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
 });
