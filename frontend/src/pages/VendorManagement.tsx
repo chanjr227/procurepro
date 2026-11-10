@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import axios from "axios";
 
 import api from "../services/api";
+import "../css/dashboard.css";
 import "../css/vendor.css";
 
 type VendorStatus = "PENDING" | "ACTIVE" | "INACTIVE";
@@ -37,12 +38,40 @@ interface VendorForm {
 }
 
 interface VendorManagementProps {
+  user: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  onLogout: () => void;
+  onNavigate: (page: string) => void;
   onBack: () => void;
 }
 
 interface ApiError {
   message?: string;
 }
+
+const menuGroups = [
+  {
+    title: "MAIN MENU",
+    items: [
+      { label: "Dashboard", icon: "▦" },
+      { label: "Vendors", icon: "♙" },
+      { label: "Requisitions", icon: "▤" },
+      { label: "Purchase Orders", icon: "▧" },
+      { label: "Invoices", icon: "▥" },
+    ],
+  },
+  {
+    title: "MANAGEMENT",
+    items: [
+      { label: "Approvals", icon: "✓", count: "24" },
+      { label: "Reports", icon: "▥" },
+      { label: "User Management", icon: "♧" },
+    ],
+  },
+];
 
 const emptyForm: VendorForm = {
   companyName: "",
@@ -57,12 +86,19 @@ const emptyForm: VendorForm = {
   status: "PENDING",
 };
 
-export default function VendorManagement({ onBack }: VendorManagementProps) {
+export default function VendorManagement({
+  user,
+  onLogout,
+  onNavigate,
+  onBack,
+}: VendorManagementProps) {
+  const [activeMenu, setActiveMenu] = useState("Vendors");
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
+  const [topbarSearch, setTopbarSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -71,6 +107,19 @@ export default function VendorManagement({ onBack }: VendorManagementProps) {
   const [form, setForm] = useState<VendorForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const handleMenuClick = (label: string) => {
+    setActiveMenu(label);
+
+    if (label === "Vendors") {
+      onNavigate("vendors");
+      return;
+    }
+
+    if (label === "Dashboard") {
+      onNavigate("dashboard");
+    }
+  };
 
   // Mengambil data vendor dari backend
   const fetchVendors = useCallback(async () => {
@@ -271,34 +320,153 @@ export default function VendorManagement({ onBack }: VendorManagementProps) {
   ).length;
 
   return (
-    <div className="vendor-page">
-      {/* HEADER */}
-      <header className="vendor-header">
-        <div>
-          <button type="button" className="vendor-back-button" onClick={onBack}>
-            ← Dashboard
-          </button>
-
-          <div className="vendor-breadcrumb">
-            Procurement <span>/</span> Vendor Management
+    <div className="dashboard-layout">
+      <aside className="dashboard-sidebar">
+        <div className="dashboard-brand">
+          <div className="dashboard-brand-logo">P</div>
+          <div>
+            <strong>ProcurePro</strong>
+            <span>PROCUREMENT SYSTEM</span>
           </div>
-
-          <h1>Vendor Management</h1>
-
-          <p>Kelola informasi dan hubungan dengan seluruh vendor perusahaan.</p>
         </div>
 
-        <button
-          type="button"
-          className="vendor-add-button"
-          onClick={openAddModal}
-        >
-          <span>＋</span> Add New Vendor
-        </button>
-      </header>
+        <div className="sidebar-workspace">
+          <span className="workspace-dot" />
+          <div>
+            <strong>Company Workspace</strong>
+            <small>Enterprise Account</small>
+          </div>
+          <span className="workspace-arrow">⌄</span>
+        </div>
 
-      {/* STATISTICS */}
-      <section className="vendor-stats">
+        <nav className="sidebar-navigation">
+          {menuGroups.map((group) => (
+            <div className="menu-group" key={group.title}>
+              <p className="menu-heading">{group.title}</p>
+
+              {group.items.map((item) => (
+                <button
+                  key={item.label}
+                  className={`sidebar-link ${
+                    activeMenu === item.label ? "active" : ""
+                  }`}
+                  onClick={() => handleMenuClick(item.label)}
+                >
+                  <span className="sidebar-icon">{item.icon}</span>
+                  <span>{item.label}</span>
+
+                  {item.count && (
+                    <span className="menu-count">{item.count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <button
+            className={`sidebar-link ${
+              activeMenu === "Settings" ? "active" : ""
+            }`}
+            onClick={() => setActiveMenu("Settings")}
+          >
+            <span className="sidebar-icon">⚙</span>
+            Settings
+          </button>
+
+          <div className="sidebar-user">
+            <div className="user-avatar">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+
+            <div className="sidebar-user-info">
+              <strong>{user.name}</strong>
+              <span>{user.role || "Administrator"}</span>
+            </div>
+
+            <button className="logout-button" onClick={onLogout} title="Logout">
+              ⇥
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main className="dashboard-main">
+        <header className="dashboard-topbar">
+          <div className="breadcrumb">
+            <span>Workspace</span>
+            <span>/</span>
+            <strong>Vendors</strong>
+          </div>
+
+          <div className="topbar-actions">
+            <label className="dashboard-search">
+              <span>⌕</span>
+              <input
+                type="search"
+                placeholder="Search anything..."
+                value={topbarSearch}
+                onChange={(e) => setTopbarSearch(e.target.value)}
+              />
+              <kbd>⌘ K</kbd>
+            </label>
+
+            <button
+              className="notification-button"
+              title="Notifications"
+              type="button"
+            >
+              ♧<i />
+            </button>
+
+            <div className="topbar-profile">
+              <div className="user-avatar">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <strong>{user.name}</strong>
+                <span>Administrator</span>
+              </div>
+              <span>⌄</span>
+            </div>
+          </div>
+        </header>
+
+        <div className="vendor-page">
+          {/* HEADER */}
+          <header className="vendor-header">
+            <div>
+              <button
+                type="button"
+                className="vendor-back-button"
+                onClick={onBack}
+              >
+                ← Dashboard
+              </button>
+
+              <div className="vendor-breadcrumb">
+                Procurement <span>/</span> Vendor Management
+              </div>
+
+              <h1>Vendor Management</h1>
+
+              <p>
+                Kelola informasi dan hubungan dengan seluruh vendor perusahaan.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="vendor-add-button"
+              onClick={openAddModal}
+            >
+              <span>＋</span> Add New Vendor
+            </button>
+          </header>
+
+          {/* STATISTICS */}
+          <section className="vendor-stats">
         <div className="vendor-stat-card">
           <div className="vendor-stat-icon purple">▤</div>
           <div>
@@ -330,7 +498,7 @@ export default function VendorManagement({ onBack }: VendorManagementProps) {
             <strong>{loading ? "—" : totalInactive}</strong>
           </div>
         </div>
-      </section>
+          </section>
 
       {/* VENDOR TABLE */}
       <section className="vendor-table-card">
@@ -473,10 +641,10 @@ export default function VendorManagement({ onBack }: VendorManagementProps) {
         <div className="vendor-table-footer">
           Menampilkan {vendors.length} vendor
         </div>
-      </section>
+          </section>
 
       {/* ADD / EDIT MODAL */}
-      {modalOpen && (
+          {modalOpen && (
         <div
           className="vendor-modal-overlay"
           onMouseDown={(e) => {
@@ -640,7 +808,9 @@ export default function VendorManagement({ onBack }: VendorManagementProps) {
             </form>
           </div>
         </div>
-      )}
+          )}
+        </div>
+      </main>
     </div>
   );
 }

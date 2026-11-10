@@ -41,7 +41,14 @@ function App() {
   }
 
   if (activePage === "vendors") {
-    return <VendorManagement onBack={() => setActivePage("dashboard")} />;
+    return (
+      <VendorManagement
+        user={user}
+        onLogout={handleLogout}
+        onNavigate={setActivePage}
+        onBack={() => setActivePage("dashboard")}
+      />
+    );
   }
 
   return (
