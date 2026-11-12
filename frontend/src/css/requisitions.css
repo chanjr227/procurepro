@@ -1,0 +1,421 @@
+.requisition-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: #172b3a;
+}
+
+.requisition-heading,
+.req-form-heading,
+.req-table-heading,
+.req-items-heading,
+.req-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.requisition-heading h1 {
+  margin: 7px 0;
+  font-size: 27px;
+  font-weight: 750;
+}
+
+.requisition-heading p,
+.req-form-heading p,
+.req-table-heading p {
+  margin: 0;
+  color: #8795aa;
+  font-size: 13px;
+}
+
+.page-eyebrow {
+  color: #087f8c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.req-primary-button,
+.req-secondary-button,
+.req-add-item {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 17px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.req-primary-button {
+  background: #087f8c;
+  color: white;
+}
+
+.req-primary-button:hover {
+  background: #066b76;
+}
+
+.req-primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.req-secondary-button {
+  background: #edf1f5;
+  color: #526273;
+}
+
+.req-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.req-stat-card,
+.req-form-card,
+.req-table-card {
+  background: #fff;
+  border: 1px solid #e9eef3;
+  border-radius: 12px;
+}
+
+.req-stat-card {
+  padding: 20px;
+}
+
+.req-stat-card span {
+  display: block;
+  color: #8795aa;
+  font-size: 12px;
+}
+
+.req-stat-card strong {
+  display: block;
+  margin-top: 10px;
+  color: #172b3a;
+  font-size: 26px;
+}
+
+.req-form-card {
+  padding: 24px;
+}
+
+.req-form-heading {
+  margin-bottom: 22px;
+}
+
+.req-form-heading h2,
+.req-table-heading h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.req-close {
+  border: 0;
+  background: transparent;
+  color: #8795aa;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.req-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.req-form-grid label,
+.req-item-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #526273;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.req-full-width {
+  grid-column: 1 / -1;
+}
+
+.req-form-grid input,
+.req-form-grid textarea,
+.req-item-row input,
+.req-filters input,
+.req-filters select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #e1e7ed;
+  border-radius: 7px;
+  outline: none;
+  padding: 11px 12px;
+  background: #fff;
+  color: #172b3a;
+  font: inherit;
+  font-size: 12px;
+}
+
+.req-form-grid input:focus,
+.req-form-grid textarea:focus,
+.req-item-row input:focus,
+.req-filters input:focus,
+.req-filters select:focus {
+  border-color: #087f8c;
+}
+
+.req-form-grid textarea {
+  resize: vertical;
+}
+
+.req-items-heading {
+  margin: 25px 0 15px;
+}
+
+.req-items-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.req-add-item {
+  background: #e8f5f6;
+  color: #087f8c;
+}
+
+.req-item-row {
+  display: grid;
+  grid-template-columns: 2fr 0.7fr 0.8fr 1.3fr 30px;
+  align-items: end;
+  gap: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+  border: 1px solid #edf0f3;
+  border-radius: 9px;
+  background: #fafcfd;
+}
+
+.req-remove-item {
+  width: 30px;
+  height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: #fff0f0;
+  color: #d34d4d;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.req-remove-item:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.req-form-actions {
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.req-table-card {
+  overflow: hidden;
+}
+
+.req-table-heading {
+  padding: 22px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.req-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.req-filters input {
+  width: 190px;
+}
+
+.req-filters select {
+  width: 140px;
+}
+
+.req-table-wrapper {
+  overflow-x: auto;
+}
+
+.req-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.req-table th {
+  padding: 14px 17px;
+  background: #f8fafb;
+  color: #8795aa;
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.req-table td {
+  padding: 16px 17px;
+  border-top: 1px solid #edf0f3;
+  color: #526273;
+  font-size: 12px;
+}
+
+.req-table td strong {
+  display: block;
+  color: #172b3a;
+}
+
+.req-table td small {
+  display: block;
+  margin-top: 5px;
+  color: #98a4b2;
+}
+
+.req-number {
+  color: #087f8c !important;
+  font-weight: 700;
+}
+
+.req-total {
+  font-weight: 700;
+  color: #172b3a !important;
+}
+
+.req-status {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.req-status.draft {
+  background: #edf1f5;
+  color: #687789;
+}
+
+.req-status.pending {
+  background: #fff4df;
+  color: #bd811b;
+}
+
+.req-status.approved {
+  background: #e5f7ed;
+  color: #238653;
+}
+
+.req-status.rejected {
+  background: #ffebeb;
+  color: #c54b4b;
+}
+
+.req-status.cancelled {
+  background: #f1edfa;
+  color: #8061ad;
+}
+
+.req-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.req-actions button {
+  border: 0;
+  border-radius: 5px;
+  padding: 6px 8px;
+  background: #e8f5f6;
+  color: #087f8c;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.req-actions button.req-delete {
+  background: #fff0f0;
+  color: #d34d4d;
+}
+
+.req-empty {
+  padding: 45px 20px;
+  text-align: center;
+  color: #8795aa;
+  font-size: 13px;
+}
+
+.req-empty strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #526273;
+}
+
+.req-empty p {
+  margin: 0;
+}
+
+.req-error {
+  padding: 12px 15px;
+  border: 1px solid #f4caca;
+  border-radius: 8px;
+  background: #fff1f1;
+  color: #bd4141;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .req-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .req-item-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .req-remove-item {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .req-table-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .requisition-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .req-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .req-full-width {
+    grid-column: auto;
+  }
+
+  .req-filters {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .req-filters input,
+  .req-filters select {
+    width: 100%;
+  }
+
+  .req-stats {
+    gap: 10px;
+  }
+
+  .req-stat-card {
+    padding: 15px;
+  }
+}

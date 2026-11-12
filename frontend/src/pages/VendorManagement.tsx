@@ -45,7 +45,6 @@ interface VendorManagementProps {
   };
   onLogout: () => void;
   onNavigate: (page: string) => void;
-  onBack: () => void;
 }
 
 interface ApiError {
@@ -56,19 +55,19 @@ const menuGroups = [
   {
     title: "MAIN MENU",
     items: [
-      { label: "Dashboard", icon: "▦" },
-      { label: "Vendors", icon: "♙" },
-      { label: "Requisitions", icon: "▤" },
-      { label: "Purchase Orders", icon: "▧" },
-      { label: "Invoices", icon: "▥" },
+      { label: "Dashboard", icon: "▦", page: "dashboard" },
+      { label: "Vendors", icon: "♙", page: "vendors" },
+      { label: "Requisitions", icon: "▤", page: "requisitions" },
+      { label: "Purchase Orders", icon: "▧", page: "purchase-orders" },
+      { label: "Invoices", icon: "▥", page: "invoices" },
     ],
   },
   {
     title: "MANAGEMENT",
     items: [
-      { label: "Approvals", icon: "✓", count: "24" },
-      { label: "Reports", icon: "▥" },
-      { label: "User Management", icon: "♧" },
+      { label: "Approvals", icon: "✓", page: "approvals", count: "24" },
+      { label: "Reports", icon: "▥", page: "reports" },
+      { label: "User Management", icon: "♧", page: "users" },
     ],
   },
 ];
@@ -90,9 +89,9 @@ export default function VendorManagement({
   user,
   onLogout,
   onNavigate,
-  onBack,
 }: VendorManagementProps) {
   const [activeMenu, setActiveMenu] = useState("Vendors");
+
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -108,20 +107,13 @@ export default function VendorManagement({
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const handleMenuClick = (label: string) => {
+  // Navigasi sidebar
+  const handleMenuClick = (label: string, page: string) => {
     setActiveMenu(label);
-
-    if (label === "Vendors") {
-      onNavigate("vendors");
-      return;
-    }
-
-    if (label === "Dashboard") {
-      onNavigate("dashboard");
-    }
+    onNavigate(page);
   };
 
-  // Mengambil data vendor dari backend
+  // Mengambil data vendor
   const fetchVendors = useCallback(async () => {
     try {
       setLoading(true);
@@ -153,16 +145,15 @@ export default function VendorManagement({
     }
   }, [search, statusFilter]);
 
-  // Memuat data ketika halaman dibuka atau filter berubah
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      fetchVendors();
+      void fetchVendors();
     }, 300);
 
     return () => window.clearTimeout(timer);
   }, [fetchVendors]);
 
-  // Membuka form tambah vendor
+  // Tambah vendor
   const openAddModal = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -170,7 +161,7 @@ export default function VendorManagement({
     setModalOpen(true);
   };
 
-  // Membuka form edit vendor
+  // Edit vendor
   const openEditModal = (vendor: Vendor) => {
     setEditingId(vendor.id);
 
@@ -191,7 +182,7 @@ export default function VendorManagement({
     setModalOpen(true);
   };
 
-  // Menutup modal
+  // Tutup modal
   const closeModal = () => {
     if (saving) return;
 
@@ -201,7 +192,7 @@ export default function VendorManagement({
     setFormError("");
   };
 
-  // Mengubah input form
+  // Perubahan input
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
@@ -213,7 +204,7 @@ export default function VendorManagement({
     }));
   };
 
-  // Menyimpan vendor baru atau memperbarui vendor
+  // Simpan vendor
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError("");
@@ -264,7 +255,7 @@ export default function VendorManagement({
     }
   };
 
-  // Menghapus vendor
+  // Hapus vendor
   const handleDelete = async (vendor: Vendor) => {
     const confirmed = window.confirm(
       `Apakah Anda yakin ingin menghapus vendor "${vendor.companyName}"?`,
@@ -295,7 +286,6 @@ export default function VendorManagement({
     });
   };
 
-  // Label status
   const statusLabel = (status: VendorStatus) => {
     const labels: Record<VendorStatus, string> = {
       PENDING: "Pending",
@@ -306,7 +296,7 @@ export default function VendorManagement({
     return labels[status];
   };
 
-  // Statistik vendor
+  // Statistik
   const totalActive = vendors.filter(
     (vendor) => vendor.status === "ACTIVE",
   ).length;
@@ -321,6 +311,7 @@ export default function VendorManagement({
 
   return (
     <div className="dashboard-layout">
+      {/* SIDEBAR */}
       <aside className="dashboard-sidebar">
         <div className="dashboard-brand">
           <div className="dashboard-brand-logo">P</div>
@@ -346,16 +337,17 @@ export default function VendorManagement({
 
               {group.items.map((item) => (
                 <button
+                  type="button"
                   key={item.label}
                   className={`sidebar-link ${
                     activeMenu === item.label ? "active" : ""
                   }`}
-                  onClick={() => handleMenuClick(item.label)}
+                  onClick={() => handleMenuClick(item.label, item.page)}
                 >
                   <span className="sidebar-icon">{item.icon}</span>
                   <span>{item.label}</span>
 
-                  {item.count && (
+                  {"count" in item && item.count && (
                     <span className="menu-count">{item.count}</span>
                   )}
                 </button>
@@ -366,9 +358,8 @@ export default function VendorManagement({
 
         <div className="sidebar-bottom">
           <button
-            className={`sidebar-link ${
-              activeMenu === "Settings" ? "active" : ""
-            }`}
+            type="button"
+            className="sidebar-link"
             onClick={() => setActiveMenu("Settings")}
           >
             <span className="sidebar-icon">⚙</span>
@@ -385,13 +376,19 @@ export default function VendorManagement({
               <span>{user.role || "Administrator"}</span>
             </div>
 
-            <button className="logout-button" onClick={onLogout} title="Logout">
+            <button
+              type="button"
+              className="logout-button"
+              onClick={onLogout}
+              title="Logout"
+            >
               ⇥
             </button>
           </div>
         </div>
       </aside>
 
+      {/* MAIN CONTENT */}
       <main className="dashboard-main">
         <header className="dashboard-topbar">
           <div className="breadcrumb">
@@ -413,9 +410,9 @@ export default function VendorManagement({
             </label>
 
             <button
+              type="button"
               className="notification-button"
               title="Notifications"
-              type="button"
             >
               ♧<i />
             </button>
@@ -426,25 +423,17 @@ export default function VendorManagement({
               </div>
               <div>
                 <strong>{user.name}</strong>
-                <span>Administrator</span>
+                <span>{user.role || "Administrator"}</span>
               </div>
               <span>⌄</span>
             </div>
           </div>
         </header>
 
+        {/* VENDOR CONTENT */}
         <div className="vendor-page">
-          {/* HEADER */}
           <header className="vendor-header">
             <div>
-              <button
-                type="button"
-                className="vendor-back-button"
-                onClick={onBack}
-              >
-                ← Dashboard
-              </button>
-
               <div className="vendor-breadcrumb">
                 Procurement <span>/</span> Vendor Management
               </div>
@@ -467,347 +456,343 @@ export default function VendorManagement({
 
           {/* STATISTICS */}
           <section className="vendor-stats">
-        <div className="vendor-stat-card">
-          <div className="vendor-stat-icon purple">▤</div>
-          <div>
-            <span>Total Vendors</span>
-            <strong>{loading ? "—" : vendors.length}</strong>
-          </div>
-        </div>
-
-        <div className="vendor-stat-card">
-          <div className="vendor-stat-icon green">✓</div>
-          <div>
-            <span>Active Vendors</span>
-            <strong>{loading ? "—" : totalActive}</strong>
-          </div>
-        </div>
-
-        <div className="vendor-stat-card">
-          <div className="vendor-stat-icon orange">◷</div>
-          <div>
-            <span>Pending Vendors</span>
-            <strong>{loading ? "—" : totalPending}</strong>
-          </div>
-        </div>
-
-        <div className="vendor-stat-card">
-          <div className="vendor-stat-icon gray">−</div>
-          <div>
-            <span>Inactive Vendors</span>
-            <strong>{loading ? "—" : totalInactive}</strong>
-          </div>
-        </div>
-          </section>
-
-      {/* VENDOR TABLE */}
-      <section className="vendor-table-card">
-        <div className="vendor-table-heading">
-          <div>
-            <h2>All Vendors</h2>
-            <p>Daftar perusahaan yang terdaftar dalam sistem.</p>
-          </div>
-        </div>
-
-        <div className="vendor-toolbar">
-          <div className="vendor-search">
-            <span>⌕</span>
-
-            <input
-              type="text"
-              placeholder="Search vendor name, code, or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <select
-            className="vendor-filter"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="ALL">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PENDING">Pending</option>
-            <option value="INACTIVE">Inactive</option>
-          </select>
-        </div>
-
-        {error && (
-          <div className="vendor-error">
-            {error}
-
-            <button type="button" onClick={fetchVendors}>
-              Try Again
-            </button>
-          </div>
-        )}
-
-        <div className="vendor-table-wrapper">
-          <table className="vendor-table">
-            <thead>
-              <tr>
-                <th>VENDOR</th>
-                <th>CONTACT PERSON</th>
-                <th>CONTACT INFO</th>
-                <th>LOCATION</th>
-                <th>STATUS</th>
-                <th>DATE ADDED</th>
-                <th>ACTION</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="vendor-empty">
-                    Loading vendor data...
-                  </td>
-                </tr>
-              ) : vendors.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="vendor-empty">
-                    <strong>No vendors found</strong>
-                    <span>Belum ada data vendor yang sesuai.</span>
-                  </td>
-                </tr>
-              ) : (
-                vendors.map((vendor) => (
-                  <tr key={vendor.id}>
-                    <td>
-                      <div className="vendor-company">
-                        <div className="vendor-avatar">
-                          {vendor.companyName.charAt(0).toUpperCase()}
-                        </div>
-
-                        <div>
-                          <strong>{vendor.companyName}</strong>
-                          <span>{vendor.vendorCode}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>{vendor.contactName || "—"}</td>
-
-                    <td>
-                      <div className="vendor-contact">
-                        <span>{vendor.email || "—"}</span>
-                        <span>{vendor.phone || "—"}</span>
-                      </div>
-                    </td>
-
-                    <td>
-                      {vendor.city || "—"}
-                      {vendor.country ? `, ${vendor.country}` : ""}
-                    </td>
-
-                    <td>
-                      <span
-                        className={`vendor-status ${vendor.status.toLowerCase()}`}
-                      >
-                        {statusLabel(vendor.status)}
-                      </span>
-                    </td>
-
-                    <td>{formatDate(vendor.createdAt)}</td>
-
-                    <td>
-                      <div className="vendor-actions">
-                        <button
-                          type="button"
-                          title="Edit vendor"
-                          onClick={() => openEditModal(vendor)}
-                        >
-                          ✎
-                        </button>
-
-                        <button
-                          type="button"
-                          className="delete"
-                          title="Delete vendor"
-                          onClick={() => handleDelete(vendor)}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="vendor-table-footer">
-          Menampilkan {vendors.length} vendor
-        </div>
-          </section>
-
-      {/* ADD / EDIT MODAL */}
-          {modalOpen && (
-        <div
-          className="vendor-modal-overlay"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) {
-              closeModal();
-            }
-          }}
-        >
-          <div className="vendor-modal">
-            <div className="vendor-modal-header">
+            <div className="vendor-stat-card">
+              <div className="vendor-stat-icon purple">▤</div>
               <div>
-                <h2>{editingId !== null ? "Edit Vendor" : "Add New Vendor"}</h2>
-
-                <p>
-                  {editingId !== null
-                    ? "Perbarui informasi perusahaan vendor."
-                    : "Masukkan informasi perusahaan vendor baru."}
-                </p>
+                <span>Total Vendors</span>
+                <strong>{loading ? "—" : vendors.length}</strong>
               </div>
-
-              <button type="button" onClick={closeModal} disabled={saving}>
-                ×
-              </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="vendor-form-grid">
-                <div className="vendor-form-group full">
-                  <label>Company Name *</label>
-                  <input
-                    name="companyName"
-                    value={form.companyName}
-                    onChange={handleChange}
-                    placeholder="Enter company name"
-                    required
-                  />
-                </div>
+            <div className="vendor-stat-card">
+              <div className="vendor-stat-icon green">✓</div>
+              <div>
+                <span>Active Vendors</span>
+                <strong>{loading ? "—" : totalActive}</strong>
+              </div>
+            </div>
 
-                <div className="vendor-form-group">
-                  <label>Contact Person</label>
-                  <input
-                    name="contactName"
-                    value={form.contactName}
-                    onChange={handleChange}
-                    placeholder="Contact person name"
-                  />
-                </div>
+            <div className="vendor-stat-card">
+              <div className="vendor-stat-icon orange">◷</div>
+              <div>
+                <span>Pending Vendors</span>
+                <strong>{loading ? "—" : totalPending}</strong>
+              </div>
+            </div>
 
-                <div className="vendor-form-group">
-                  <label>Email Address</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="vendor@company.com"
-                  />
-                </div>
+            <div className="vendor-stat-card">
+              <div className="vendor-stat-icon gray">−</div>
+              <div>
+                <span>Inactive Vendors</span>
+                <strong>{loading ? "—" : totalInactive}</strong>
+              </div>
+            </div>
+          </section>
 
-                <div className="vendor-form-group">
-                  <label>Phone Number</label>
-                  <input
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    placeholder="+62..."
-                  />
-                </div>
+          {/* VENDOR TABLE */}
+          <section className="vendor-table-card">
+            <div className="vendor-table-heading">
+              <div>
+                <h2>All Vendors</h2>
+                <p>Daftar perusahaan yang terdaftar dalam sistem.</p>
+              </div>
+            </div>
 
-                <div className="vendor-form-group">
-                  <label>Tax Number</label>
-                  <input
-                    name="taxNumber"
-                    value={form.taxNumber}
-                    onChange={handleChange}
-                    placeholder="Tax identification number"
-                  />
-                </div>
-
-                <div className="vendor-form-group">
-                  <label>City</label>
-                  <input
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                    placeholder="City"
-                  />
-                </div>
-
-                <div className="vendor-form-group">
-                  <label>Country</label>
-                  <input
-                    name="country"
-                    value={form.country}
-                    onChange={handleChange}
-                    placeholder="Country"
-                  />
-                </div>
-
-                <div className="vendor-form-group full">
-                  <label>Website</label>
-                  <input
-                    name="website"
-                    value={form.website}
-                    onChange={handleChange}
-                    placeholder="https://company.com"
-                  />
-                </div>
-
-                <div className="vendor-form-group full">
-                  <label>Company Address</label>
-                  <textarea
-                    name="address"
-                    value={form.address}
-                    onChange={handleChange}
-                    placeholder="Enter complete company address"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="vendor-form-group full">
-                  <label>Vendor Status</label>
-                  <select
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                  </select>
-                </div>
+            <div className="vendor-toolbar">
+              <div className="vendor-search">
+                <span>⌕</span>
+                <input
+                  type="text"
+                  placeholder="Search vendor name, code, or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
 
-              {formError && (
-                <div className="vendor-form-error">{formError}</div>
-              )}
+              <select
+                className="vendor-filter"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="ALL">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="PENDING">Pending</option>
+                <option value="INACTIVE">Inactive</option>
+              </select>
+            </div>
 
-              <div className="vendor-modal-footer">
-                <button
-                  type="button"
-                  className="vendor-cancel-button"
-                  onClick={closeModal}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="vendor-save-button"
-                  disabled={saving}
-                >
-                  {saving
-                    ? "Saving..."
-                    : editingId !== null
-                      ? "Save Changes"
-                      : "Create Vendor"}
+            {error && (
+              <div className="vendor-error">
+                {error}
+                <button type="button" onClick={() => void fetchVendors()}>
+                  Try Again
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
+            )}
+
+            <div className="vendor-table-wrapper">
+              <table className="vendor-table">
+                <thead>
+                  <tr>
+                    <th>VENDOR</th>
+                    <th>CONTACT PERSON</th>
+                    <th>CONTACT INFO</th>
+                    <th>LOCATION</th>
+                    <th>STATUS</th>
+                    <th>DATE ADDED</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="vendor-empty">
+                        Loading vendor data...
+                      </td>
+                    </tr>
+                  ) : vendors.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="vendor-empty">
+                        <strong>No vendors found</strong>
+                        <span>Belum ada data vendor yang sesuai.</span>
+                      </td>
+                    </tr>
+                  ) : (
+                    vendors.map((vendor) => (
+                      <tr key={vendor.id}>
+                        <td>
+                          <div className="vendor-company">
+                            <div className="vendor-avatar">
+                              {vendor.companyName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <strong>{vendor.companyName}</strong>
+                              <span>{vendor.vendorCode}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>{vendor.contactName || "—"}</td>
+
+                        <td>
+                          <div className="vendor-contact">
+                            <span>{vendor.email || "—"}</span>
+                            <span>{vendor.phone || "—"}</span>
+                          </div>
+                        </td>
+
+                        <td>
+                          {vendor.city || "—"}
+                          {vendor.country ? `, ${vendor.country}` : ""}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`vendor-status ${vendor.status.toLowerCase()}`}
+                          >
+                            {statusLabel(vendor.status)}
+                          </span>
+                        </td>
+
+                        <td>{formatDate(vendor.createdAt)}</td>
+
+                        <td>
+                          <div className="vendor-actions">
+                            <button
+                              type="button"
+                              title="Edit vendor"
+                              onClick={() => openEditModal(vendor)}
+                            >
+                              ✎
+                            </button>
+
+                            <button
+                              type="button"
+                              className="delete"
+                              title="Delete vendor"
+                              onClick={() => void handleDelete(vendor)}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="vendor-table-footer">
+              Menampilkan {vendors.length} vendor
+            </div>
+          </section>
+
+          {/* ADD / EDIT MODAL */}
+          {modalOpen && (
+            <div
+              className="vendor-modal-overlay"
+              onMouseDown={(e) => {
+                if (e.target === e.currentTarget) closeModal();
+              }}
+            >
+              <div className="vendor-modal">
+                <div className="vendor-modal-header">
+                  <div>
+                    <h2>
+                      {editingId !== null ? "Edit Vendor" : "Add New Vendor"}
+                    </h2>
+                    <p>
+                      {editingId !== null
+                        ? "Perbarui informasi perusahaan vendor."
+                        : "Masukkan informasi perusahaan vendor baru."}
+                    </p>
+                  </div>
+
+                  <button type="button" onClick={closeModal} disabled={saving}>
+                    ×
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="vendor-form-grid">
+                    <div className="vendor-form-group full">
+                      <label>Company Name *</label>
+                      <input
+                        name="companyName"
+                        value={form.companyName}
+                        onChange={handleChange}
+                        placeholder="Enter company name"
+                        required
+                      />
+                    </div>
+
+                    <div className="vendor-form-group">
+                      <label>Contact Person</label>
+                      <input
+                        name="contactName"
+                        value={form.contactName}
+                        onChange={handleChange}
+                        placeholder="Contact person name"
+                      />
+                    </div>
+
+                    <div className="vendor-form-group">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="vendor@company.com"
+                      />
+                    </div>
+
+                    <div className="vendor-form-group">
+                      <label>Phone Number</label>
+                      <input
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="+62..."
+                      />
+                    </div>
+
+                    <div className="vendor-form-group">
+                      <label>Tax Number</label>
+                      <input
+                        name="taxNumber"
+                        value={form.taxNumber}
+                        onChange={handleChange}
+                        placeholder="Tax identification number"
+                      />
+                    </div>
+
+                    <div className="vendor-form-group">
+                      <label>City</label>
+                      <input
+                        name="city"
+                        value={form.city}
+                        onChange={handleChange}
+                        placeholder="City"
+                      />
+                    </div>
+
+                    <div className="vendor-form-group">
+                      <label>Country</label>
+                      <input
+                        name="country"
+                        value={form.country}
+                        onChange={handleChange}
+                        placeholder="Country"
+                      />
+                    </div>
+
+                    <div className="vendor-form-group full">
+                      <label>Website</label>
+                      <input
+                        name="website"
+                        value={form.website}
+                        onChange={handleChange}
+                        placeholder="https://company.com"
+                      />
+                    </div>
+
+                    <div className="vendor-form-group full">
+                      <label>Company Address</label>
+                      <textarea
+                        name="address"
+                        value={form.address}
+                        onChange={handleChange}
+                        placeholder="Enter complete company address"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="vendor-form-group full">
+                      <label>Vendor Status</label>
+                      <select
+                        name="status"
+                        value={form.status}
+                        onChange={handleChange}
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {formError && (
+                    <div className="vendor-form-error">{formError}</div>
+                  )}
+
+                  <div className="vendor-modal-footer">
+                    <button
+                      type="button"
+                      className="vendor-cancel-button"
+                      onClick={closeModal}
+                      disabled={saving}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="vendor-save-button"
+                      disabled={saving}
+                    >
+                      {saving
+                        ? "Saving..."
+                        : editingId !== null
+                          ? "Save Changes"
+                          : "Create Vendor"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           )}
         </div>
       </main>

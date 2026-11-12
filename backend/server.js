@@ -5,6 +5,8 @@ const prisma = require("./src/lib/prisma");
 const authRoutes = require("./src/routes/authRoutes");
 const vendorRoutes = require("./src/routes/vendorRoutes");
 
+const requisitionRoutes = require("./src/routes/requisitionRoutes");
+
 require("dotenv").config();
 
 const app = express();
@@ -18,6 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes API
 app.use("/api/auth", authRoutes);
 app.use("/api/vendors", vendorRoutes);
+
+app.use("/api/requisitions", requisitionRoutes);
 
 // Homepage
 app.get("/", (req, res) => {

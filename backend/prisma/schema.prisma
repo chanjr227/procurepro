@@ -8,32 +8,35 @@ datasource db {
 
 // Tabel Roles
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique @db.VarChar(100)
-  description String?  @db.Text
+  id          Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(100)
+  description String? @db.Text
 
-  users       User[]
+  users User[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("roles")
 }
 
 // Tabel Users
 model User {
-  id           Int      @id @default(autoincrement())
-  name         String   @db.VarChar(150)
-  email        String   @unique @db.VarChar(150)
-  passwordHash String   @db.VarChar(255)
+  id           Int    @id @default(autoincrement())
+  name         String @db.VarChar(150)
+  email        String @unique @db.VarChar(150)
+  passwordHash String @db.VarChar(255)
 
-  roleId       Int
-  role         Role     @relation(fields: [roleId], references: [id])
+  roleId Int
+  role   Role @relation(fields: [roleId], references: [id])
 
-  isActive     Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdRequisitions  Requisition[] @relation("RequisitionCreator")
+  approvedRequisitions Requisition[] @relation("RequisitionApprover")
 
   @@index([roleId])
   @@map("users")
@@ -46,22 +49,75 @@ enum VendorStatus {
 }
 
 model Vendor {
-  id             Int          @id @default(autoincrement())
-  vendorCode     String       @unique @db.VarChar(50)
-  companyName    String       @db.VarChar(200)
-  contactName    String?      @db.VarChar(150)
-  email          String?      @unique @db.VarChar(150)
-  phone          String?      @db.VarChar(30)
-  taxNumber      String?      @db.VarChar(50)
-  address        String?      @db.Text
-  city           String?      @db.VarChar(100)
-  country        String?      @db.VarChar(100)
-  website        String?      @db.VarChar(200)
-  status         VendorStatus @default(PENDING)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id          Int          @id @default(autoincrement())
+  vendorCode  String       @unique @db.VarChar(50)
+  companyName String       @db.VarChar(200)
+  contactName String?      @db.VarChar(150)
+  email       String?      @unique @db.VarChar(150)
+  phone       String?      @db.VarChar(30)
+  taxNumber   String?      @db.VarChar(50)
+  address     String?      @db.Text
+  city        String?      @db.VarChar(100)
+  country     String?      @db.VarChar(100)
+  website     String?      @db.VarChar(200)
+  status      VendorStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([companyName])
   @@index([status])
   @@map("vendors")
+}
+
+enum RequisitionStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Requisition {
+  id            Int               @id @default(autoincrement())
+  requestNumber String            @unique @db.VarChar(50)
+  title         String            @db.VarChar(200)
+  description   String?           @db.Text
+  department    String            @db.VarChar(100)
+  neededDate    DateTime?
+  status        RequisitionStatus @default(DRAFT)
+
+  requestedById Int
+  requestedBy   User @relation("RequisitionCreator", fields: [requestedById], references: [id])
+
+  approvedById Int?
+  approvedBy   User? @relation("RequisitionApprover", fields: [approvedById], references: [id])
+
+  rejectionReason String? @db.Text
+
+  items RequisitionItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([requestedById])
+  @@map("requisitions")
+}
+
+model RequisitionItem {
+  id            Int         @id @default(autoincrement())
+  requisitionId Int
+  requisition   Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+
+  itemName           String  @db.VarChar(200)
+  description        String? @db.Text
+  quantity           Int
+  unit               String  @db.VarChar(50)
+  estimatedUnitPrice Decimal @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([requisitionId])
+  @@map("requisition_items")
 }

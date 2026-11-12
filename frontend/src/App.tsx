@@ -46,13 +46,17 @@ function App() {
         user={user}
         onLogout={handleLogout}
         onNavigate={setActivePage}
-        onBack={() => setActivePage("dashboard")}
       />
     );
   }
 
   return (
-    <Dashboard user={user} onLogout={handleLogout} onNavigate={setActivePage} />
+    <Dashboard
+      user={user}
+      onLogout={handleLogout}
+      onNavigate={setActivePage}
+      activePage={activePage}
+    />
   );
 }
 
