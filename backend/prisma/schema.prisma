@@ -37,6 +37,7 @@ model User {
 
   createdRequisitions  Requisition[] @relation("RequisitionCreator")
   approvedRequisitions Requisition[] @relation("RequisitionApprover")
+  approvalActions      ApprovalHistory[] @relation("ApprovalActor")
 
   @@index([roleId])
   @@map("users")
@@ -77,6 +78,11 @@ enum RequisitionStatus {
   CANCELLED
 }
 
+enum ApprovalAction {
+  APPROVED
+  REJECTED
+}
+
 model Requisition {
   id            Int               @id @default(autoincrement())
   requestNumber String            @unique @db.VarChar(50)
@@ -95,6 +101,8 @@ model Requisition {
   rejectionReason String? @db.Text
 
   items RequisitionItem[]
+
+  approvalHistory ApprovalHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -120,4 +128,24 @@ model RequisitionItem {
 
   @@index([requisitionId])
   @@map("requisition_items")
+}
+
+
+model ApprovalHistory {
+  id Int @id @default(autoincrement())
+
+  requisitionId Int
+  requisition Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+
+  actorId Int
+  actor User @relation("ApprovalActor", fields: [actorId], references: [id])
+
+  action ApprovalAction
+  comments String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([requisitionId])
+  @@index([actorId])
+  @@map("approval_history")
 }

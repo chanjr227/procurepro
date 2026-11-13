@@ -7,6 +7,8 @@ const vendorRoutes = require("./src/routes/vendorRoutes");
 
 const requisitionRoutes = require("./src/routes/requisitionRoutes");
 
+const approvalRoutes = require("./src/routes/approvalRoutes");
+
 require("dotenv").config();
 
 const app = express();
@@ -22,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/vendors", vendorRoutes);
 
 app.use("/api/requisitions", requisitionRoutes);
+
+app.use("/api/approvals", approvalRoutes);
 
 // Homepage
 app.get("/", (req, res) => {
