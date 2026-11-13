@@ -419,3 +419,144 @@
     padding: 15px;
   }
 }
+
+/* Action Buttons */
+.req-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.req-actions button {
+  padding: 7px 10px;
+  border: 1px solid #dce4ec;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.req-actions button:hover {
+  background: #f1f5f9;
+}
+
+.req-actions .req-view {
+  color: #087f8c;
+  border-color: #087f8c;
+}
+
+.req-actions .req-approve,
+.req-detail-footer .req-approve {
+  background: #087f8c;
+  color: #ffffff;
+  border-color: #087f8c;
+}
+
+/* Detail Modal */
+.req-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.req-detail-modal {
+  width: 100%;
+  max-width: 850px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.req-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+}
+
+.req-detail-header h2 {
+  margin: 8px 0;
+  color: #102a36;
+}
+
+.req-detail-header p {
+  color: #8795aa;
+  margin: 0;
+}
+
+.req-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.req-detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.req-detail-grid span {
+  color: #8795aa;
+  font-size: 12px;
+}
+
+.req-detail-grid strong {
+  color: #102a36;
+  font-size: 14px;
+}
+
+.req-detail-description {
+  grid-column: 1 / -1;
+}
+
+.req-detail-description p {
+  margin: 0;
+  color: #344054;
+}
+
+.req-detail-items h3 {
+  color: #102a36;
+  margin-bottom: 14px;
+}
+
+.req-detail-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.req-detail-footer button {
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .req-detail-modal {
+    padding: 18px;
+  }
+
+  .req-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .req-detail-description {
+    grid-column: auto;
+  }
+}

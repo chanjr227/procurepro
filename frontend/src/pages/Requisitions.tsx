@@ -38,8 +38,11 @@ const formatRupiah = (value: number) =>
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(value);
-
-export default function Requisitions() {
+export default function Requisitions({
+  onNavigate,
+}: {
+  onNavigate: (page: string) => void;
+}) {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,6 +51,8 @@ export default function Requisitions() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [error, setError] = useState("");
+  const [selectedRequisition, setSelectedRequisition] =
+    useState<Requisition | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -432,6 +437,159 @@ export default function Requisitions() {
         </form>
       )}
 
+      {selectedRequisition && (
+        <div
+          className="req-modal-overlay"
+          onClick={() => setSelectedRequisition(null)}
+        >
+          <div
+            className="req-detail-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="req-detail-header">
+              <div>
+                <span className="page-eyebrow">REQUISITION DETAIL</span>
+                <h2>{selectedRequisition.requestNumber}</h2>
+                <p>Informasi lengkap permintaan pengadaan.</p>
+              </div>
+
+              <button
+                type="button"
+                className="req-close"
+                onClick={() => setSelectedRequisition(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="req-detail-grid">
+              <div>
+                <span>Request Title</span>
+                <strong>{selectedRequisition.title}</strong>
+              </div>
+
+              <div>
+                <span>Department</span>
+                <strong>{selectedRequisition.department}</strong>
+              </div>
+
+              <div>
+                <span>Requested By</span>
+                <strong>
+                  {selectedRequisition.requestedBy?.name || "User"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Status</span>
+                <strong>{selectedRequisition.status}</strong>
+              </div>
+
+              <div>
+                <span>Needed Date</span>
+                <strong>
+                  {selectedRequisition.neededDate
+                    ? new Date(
+                        selectedRequisition.neededDate,
+                      ).toLocaleDateString("id-ID")
+                    : "-"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Created At</span>
+                <strong>
+                  {new Date(selectedRequisition.createdAt).toLocaleDateString(
+                    "id-ID",
+                  )}
+                </strong>
+              </div>
+
+              <div className="req-detail-description">
+                <span>Description</span>
+                <p>{selectedRequisition.description || "-"}</p>
+              </div>
+            </div>
+
+            <div className="req-detail-items">
+              <h3>Requested Items</h3>
+
+              <div className="req-table-wrapper">
+                <table className="req-table">
+                  <thead>
+                    <tr>
+                      <th>Item Name</th>
+                      <th>Quantity</th>
+                      <th>Unit</th>
+                      <th>Estimated Price</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {selectedRequisition.items.map((detail, index) => (
+                      <tr key={detail.id || index}>
+                        <td>
+                          <strong>{detail.itemName}</strong>
+                          <small>{detail.description || "-"}</small>
+                        </td>
+
+                        <td>{detail.quantity}</td>
+                        <td>{detail.unit}</td>
+                        <td>
+                          {formatRupiah(Number(detail.estimatedUnitPrice))}
+                        </td>
+                        <td>
+                          {formatRupiah(
+                            detail.quantity * Number(detail.estimatedUnitPrice),
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+
+                  <tfoot>
+                    <tr>
+                      <td colSpan={4}>Estimated Total</td>
+                      <td>
+                        <strong>
+                          {formatRupiah(
+                            getTotal(selectedRequisition.items || []),
+                          )}
+                        </strong>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <div className="req-detail-footer">
+              {selectedRequisition.status === "PENDING" && (
+                <button
+                  type="button"
+                  className="req-approve"
+                  onClick={() => {
+                    setSelectedRequisition(null);
+                    onNavigate("approvals");
+                  }}
+                >
+                  Proses Approval
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="req-secondary-button"
+                onClick={() => setSelectedRequisition(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="req-table-card">
         <div className="req-table-heading">
           <div>
@@ -502,21 +660,37 @@ export default function Requisitions() {
                     </td>
                     <td>
                       <div className="req-actions">
+                        {/* Tombol Detail untuk semua status */}
+                        <button
+                          type="button"
+                          className="req-view"
+                          onClick={() => setSelectedRequisition(item)}
+                          title="Lihat Detail"
+                        >
+                          Detail
+                        </button>
+
+                        {/* Tombol khusus DRAFT */}
                         {item.status === "DRAFT" && (
                           <>
                             <button
+                              type="button"
                               onClick={() => openEditForm(item)}
                               title="Edit"
                             >
                               Edit
                             </button>
+
                             <button
+                              type="button"
                               onClick={() => handleSubmitRequest(item.id)}
                               title="Submit"
                             >
                               Submit
                             </button>
+
                             <button
+                              type="button"
                               className="req-delete"
                               onClick={() => handleDelete(item.id)}
                               title="Delete"
@@ -524,6 +698,18 @@ export default function Requisitions() {
                               Delete
                             </button>
                           </>
+                        )}
+
+                        {/* Tombol khusus PENDING */}
+                        {item.status === "PENDING" && (
+                          <button
+                            type="button"
+                            className="req-approve"
+                            onClick={() => onNavigate("approvals")}
+                            title="Proses Approval"
+                          >
+                            Proses Approval
+                          </button>
                         )}
                       </div>
                     </td>

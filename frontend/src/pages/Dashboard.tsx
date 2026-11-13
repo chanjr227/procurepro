@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import "../css/dashboard.css";
 import VendorManagement from "./VendorManagement";
 import Requisitions from "./Requisitions";
+import ApprovalManagement from "./ApprovalManagement";
 
 const stats = [
   {
@@ -142,6 +143,8 @@ export default function Dashboard({
       setActiveMenu("Vendors");
     } else if (activePage === "requisitions") {
       setActiveMenu("Requisitions");
+    } else if (activePage === "approvals") {
+      setActiveMenu("Approvals");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -160,8 +163,14 @@ export default function Dashboard({
       return;
     }
 
+    if (label === "Approvals") {
+      onNavigate("approvals");
+      return;
+    }
+
     if (label === "Dashboard") {
       onNavigate("dashboard");
+      return;
     }
   };
 
@@ -287,7 +296,9 @@ export default function Dashboard({
               onNavigate={onNavigate}
             />
           ) : activePage === "requisitions" ? (
-            <Requisitions />
+            <Requisitions onNavigate={onNavigate} />
+          ) : activePage === "approvals" ? (
+            <ApprovalManagement />
           ) : (
             <>
               <section className="dashboard-welcome">
