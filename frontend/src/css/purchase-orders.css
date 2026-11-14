@@ -280,3 +280,133 @@
     max-width: none;
   }
 }
+
+/* Purchase Order integration additions */
+
+.po-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.po-alert button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.po-alert-error {
+  color: #b42318;
+  background: #fef3f2;
+}
+
+.po-alert-success {
+  color: #067647;
+  background: #ecfdf3;
+}
+
+.po-items-section {
+  margin-top: 28px;
+}
+
+.po-items-section .po-table input {
+  width: 125px;
+  padding: 9px;
+  border: 1px solid #d0d5dd;
+  border-radius: 7px;
+}
+
+.po-total-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.po-total-summary p {
+  margin: 0;
+}
+
+.po-total-summary h3 {
+  margin: 8px 0 0;
+}
+
+.po-action-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.po-action-group .po-secondary-button {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.po-action-select {
+  max-width: 135px;
+}
+
+.po-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+  overflow-y: auto;
+}
+
+.po-detail-modal {
+  width: min(850px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 26px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.po-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+
+.po-detail-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.po-detail-grid small {
+  color: #8795aa;
+}
+
+.po-detail-grid strong {
+  color: #102a36;
+  font-size: 14px;
+}
+
+.po-detail-modal h3 {
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .po-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .po-detail-modal {
+    padding: 18px;
+  }
+}
