@@ -4,6 +4,7 @@ import "../css/dashboard.css";
 import VendorManagement from "./VendorManagement";
 import Requisitions from "./Requisitions";
 import ApprovalManagement from "./ApprovalManagement";
+import PurchaseOrders from "./PurchaseOrders";
 
 const stats = [
   {
@@ -145,6 +146,8 @@ export default function Dashboard({
       setActiveMenu("Requisitions");
     } else if (activePage === "approvals") {
       setActiveMenu("Approvals");
+    } else if (activePage === "purchase-orders") {
+      setActiveMenu("Purchase Orders");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -165,6 +168,11 @@ export default function Dashboard({
 
     if (label === "Approvals") {
       onNavigate("approvals");
+      return;
+    }
+
+    if (label === "Purchase Orders") {
+      onNavigate("purchase-orders");
       return;
     }
 
@@ -299,11 +307,13 @@ export default function Dashboard({
             <Requisitions onNavigate={onNavigate} />
           ) : activePage === "approvals" ? (
             <ApprovalManagement />
+          ) : activePage === "purchase-orders" ? (
+            <PurchaseOrders />
           ) : (
             <>
               <section className="dashboard-welcome">
                 <div>
-                  <p className="eyebrow">TUESDAY, 10 NOVEMBER 2026</p>
+                  <p className="eyebrow">SATURDAY, 14 NOVEMBER 2026</p>
                   <h1>Good afternoon, {user.name.split(" ")[0]}</h1>
                   <p>
                     Berikut ringkasan aktivitas procurement perusahaan hari ini.
@@ -464,7 +474,7 @@ export default function Dashboard({
 
                     <button
                       className="text-action"
-                      onClick={() => setActiveMenu("Purchase Orders")}
+                      onClick={() => onNavigate("purchase-orders")}
                     >
                       View all →
                     </button>

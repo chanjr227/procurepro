@@ -64,6 +64,7 @@ model Vendor {
   status      VendorStatus @default(PENDING)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  purchaseOrders PurchaseOrder[]
 
   @@index([companyName])
   @@index([status])
@@ -103,6 +104,7 @@ model Requisition {
   items RequisitionItem[]
 
   approvalHistory ApprovalHistory[]
+  purchaseOrder PurchaseOrder?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -148,4 +150,64 @@ model ApprovalHistory {
   @@index([requisitionId])
   @@index([actorId])
   @@map("approval_history")
+}
+
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  COMPLETED
+  CANCELLED
+}
+
+model PurchaseOrder {
+  id          Int      @id @default(autoincrement())
+  poNumber    String   @unique @db.VarChar(50)
+
+  requisitionId Int         @unique
+  requisition   Requisition @relation(fields: [requisitionId], references: [id])
+
+  vendorId Int
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  orderDate    DateTime  @default(now())
+  deliveryDate DateTime?
+
+  status PurchaseOrderStatus @default(DRAFT)
+
+  notes       String?  @db.Text
+  subtotal    Decimal  @db.Decimal(15, 2)
+  tax         Decimal  @default(0) @db.Decimal(15, 2)
+  totalAmount Decimal  @db.Decimal(15, 2)
+
+  items PurchaseOrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id Int @id @default(autoincrement())
+
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  itemName    String  @db.VarChar(200)
+  description String? @db.Text
+  quantity    Int
+  unit        String  @db.VarChar(50)
+
+  unitPrice Decimal @db.Decimal(15, 2)
+  totalPrice Decimal @db.Decimal(15, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([purchaseOrderId])
+  @@map("purchase_order_items")
 }
