@@ -119,11 +119,7 @@ const getAllowedStatuses = (status: POStatus): POStatus[] => {
   return transitions[status];
 };
 
-interface PurchaseOrdersProps {
-  onNavigate?: (page: string) => void;
-}
-
-export default function PurchaseOrders({ onNavigate }: PurchaseOrdersProps) {
+export default function PurchaseOrders() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
