@@ -11,6 +11,8 @@ const approvalRoutes = require("./src/routes/approvalRoutes");
 
 const purchaseOrderRoutes = require("./src/routes/purchaseOrderRoutes");
 
+const goodsReceiptRoutes = require("./src/routes/goodsReceiptRoutes");
+
 require("dotenv").config();
 
 const app = express();
@@ -30,6 +32,8 @@ app.use("/api/requisitions", requisitionRoutes);
 app.use("/api/approvals", approvalRoutes);
 
 app.use("/api/purchase-orders", purchaseOrderRoutes);
+
+app.use("/api/goods-receipts", goodsReceiptRoutes);
 
 // Homepage
 app.get("/", (req, res) => {

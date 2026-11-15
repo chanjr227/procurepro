@@ -5,6 +5,7 @@ import VendorManagement from "./VendorManagement";
 import Requisitions from "./Requisitions";
 import ApprovalManagement from "./ApprovalManagement";
 import PurchaseOrders from "./PurchaseOrders";
+import GoodsReceipt from "./GoodsReceipt";
 
 const stats = [
   {
@@ -106,6 +107,7 @@ const menuGroups = [
       { label: "Vendors", icon: "♙" },
       { label: "Requisitions", icon: "▤" },
       { label: "Purchase Orders", icon: "▧" },
+      { label: "Goods Receipt", icon: "📦" },
       { label: "Invoices", icon: "▥" },
     ],
   },
@@ -148,6 +150,8 @@ export default function Dashboard({
       setActiveMenu("Approvals");
     } else if (activePage === "purchase-orders") {
       setActiveMenu("Purchase Orders");
+    } else if (activePage === "goods-receipts") {
+      setActiveMenu("Goods Receipt");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -173,6 +177,11 @@ export default function Dashboard({
 
     if (label === "Purchase Orders") {
       onNavigate("purchase-orders");
+      return;
+    }
+
+    if (label === "Goods Receipt") {
+      onNavigate("goods-receipts");
       return;
     }
 
@@ -309,6 +318,8 @@ export default function Dashboard({
             <ApprovalManagement />
           ) : activePage === "purchase-orders" ? (
             <PurchaseOrders />
+          ) : activePage === "goods-receipts" ? (
+            <GoodsReceipt />
           ) : (
             <>
               <section className="dashboard-welcome">

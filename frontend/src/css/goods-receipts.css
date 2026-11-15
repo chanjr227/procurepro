@@ -1,0 +1,179 @@
+/* =====================================
+   GOODS RECEIPT
+===================================== */
+
+.gr-page {
+  width: 100%;
+}
+
+.gr-page .po-header {
+  align-items: center;
+}
+
+.gr-page .po-stat-card {
+  min-height: 130px;
+}
+
+.gr-page .po-stat-card strong {
+  display: block;
+  margin: 12px 0 5px;
+  font-size: 28px;
+  font-weight: 750;
+}
+
+/* =====================================
+   STATUS
+===================================== */
+
+.gr-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 11px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.gr-status.partial {
+  color: #a16207;
+  background: #fef3c7;
+}
+
+.gr-status.completed {
+  color: #047857;
+  background: #d1fae5;
+}
+
+/* =====================================
+   FORM INPUT
+===================================== */
+
+.gr-page .po-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gr-page .po-form-grid small {
+  color: #8795aa;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.gr-quantity-input {
+  width: 90px;
+  min-width: 75px;
+  padding: 9px 10px;
+  border: 1px solid #d8e0e9;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: #102a36;
+  font: inherit;
+}
+
+.gr-quantity-input:focus {
+  border-color: #087f8c;
+  box-shadow: 0 0 0 3px rgba(8, 127, 140, 0.1);
+}
+
+.gr-quantity-input:disabled {
+  background: #f4f7fb;
+  cursor: not-allowed;
+}
+
+/* =====================================
+   ITEM NOTES
+===================================== */
+
+.gr-item-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.gr-item-notes h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #102a36;
+  font-size: 14px;
+}
+
+.gr-item-notes label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gr-item-notes input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #d8e0e9;
+  border-radius: 8px;
+  outline: none;
+  font: inherit;
+  font-weight: 400;
+}
+
+.gr-item-notes input:focus {
+  border-color: #087f8c;
+  box-shadow: 0 0 0 3px rgba(8, 127, 140, 0.1);
+}
+
+/* =====================================
+   INFORMATION
+===================================== */
+
+.gr-form-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid #bae6fd;
+  border-radius: 9px;
+  background: #f0f9ff;
+  color: #075985;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.gr-detail-notes {
+  margin-top: 20px;
+  padding: 13px 15px;
+  border-radius: 8px;
+  background: #f4f7fb;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =====================================
+   RESPONSIVE
+===================================== */
+
+@media (max-width: 768px) {
+  .gr-item-notes {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-quantity-input {
+    width: 75px;
+  }
+
+  .gr-page .po-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .gr-page .po-header button {
+    width: 100%;
+  }
+}
