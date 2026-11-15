@@ -35,8 +35,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdRequisitions  Requisition[] @relation("RequisitionCreator")
-  approvedRequisitions Requisition[] @relation("RequisitionApprover")
+  createdRequisitions  Requisition[]     @relation("RequisitionCreator")
+  approvedRequisitions Requisition[]     @relation("RequisitionApprover")
   approvalActions      ApprovalHistory[] @relation("ApprovalActor")
 
   @@index([roleId])
@@ -50,20 +50,20 @@ enum VendorStatus {
 }
 
 model Vendor {
-  id          Int          @id @default(autoincrement())
-  vendorCode  String       @unique @db.VarChar(50)
-  companyName String       @db.VarChar(200)
-  contactName String?      @db.VarChar(150)
-  email       String?      @unique @db.VarChar(150)
-  phone       String?      @db.VarChar(30)
-  taxNumber   String?      @db.VarChar(50)
-  address     String?      @db.Text
-  city        String?      @db.VarChar(100)
-  country     String?      @db.VarChar(100)
-  website     String?      @db.VarChar(200)
-  status      VendorStatus @default(PENDING)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id             Int             @id @default(autoincrement())
+  vendorCode     String          @unique @db.VarChar(50)
+  companyName    String          @db.VarChar(200)
+  contactName    String?         @db.VarChar(150)
+  email          String?         @unique @db.VarChar(150)
+  phone          String?         @db.VarChar(30)
+  taxNumber      String?         @db.VarChar(50)
+  address        String?         @db.Text
+  city           String?         @db.VarChar(100)
+  country        String?         @db.VarChar(100)
+  website        String?         @db.VarChar(200)
+  status         VendorStatus    @default(PENDING)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   purchaseOrders PurchaseOrder[]
 
   @@index([companyName])
@@ -104,7 +104,7 @@ model Requisition {
   items RequisitionItem[]
 
   approvalHistory ApprovalHistory[]
-  purchaseOrder PurchaseOrder?
+  purchaseOrder   PurchaseOrder?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -132,18 +132,17 @@ model RequisitionItem {
   @@map("requisition_items")
 }
 
-
 model ApprovalHistory {
   id Int @id @default(autoincrement())
 
   requisitionId Int
-  requisition Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  requisition   Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
 
   actorId Int
-  actor User @relation("ApprovalActor", fields: [actorId], references: [id])
+  actor   User @relation("ApprovalActor", fields: [actorId], references: [id])
 
-  action ApprovalAction
-  comments String? @db.Text
+  action   ApprovalAction
+  comments String?        @db.Text
 
   createdAt DateTime @default(now())
 
@@ -151,7 +150,6 @@ model ApprovalHistory {
   @@index([actorId])
   @@map("approval_history")
 }
-
 
 enum PurchaseOrderStatus {
   DRAFT
@@ -161,8 +159,8 @@ enum PurchaseOrderStatus {
 }
 
 model PurchaseOrder {
-  id          Int      @id @default(autoincrement())
-  poNumber    String   @unique @db.VarChar(50)
+  id       Int    @id @default(autoincrement())
+  poNumber String @unique @db.VarChar(50)
 
   requisitionId Int         @unique
   requisition   Requisition @relation(fields: [requisitionId], references: [id])
@@ -175,12 +173,14 @@ model PurchaseOrder {
 
   status PurchaseOrderStatus @default(DRAFT)
 
-  notes       String?  @db.Text
-  subtotal    Decimal  @db.Decimal(15, 2)
-  tax         Decimal  @default(0) @db.Decimal(15, 2)
-  totalAmount Decimal  @db.Decimal(15, 2)
+  notes       String? @db.Text
+  subtotal    Decimal @db.Decimal(15, 2)
+  tax         Decimal @default(0) @db.Decimal(15, 2)
+  totalAmount Decimal @db.Decimal(15, 2)
 
   items PurchaseOrderItem[]
+
+  goodsReceipts GoodsReceipt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -202,12 +202,60 @@ model PurchaseOrderItem {
   quantity    Int
   unit        String  @db.VarChar(50)
 
-  unitPrice Decimal @db.Decimal(15, 2)
+  unitPrice  Decimal @db.Decimal(15, 2)
   totalPrice Decimal @db.Decimal(15, 2)
+
+  goodsReceiptItems GoodsReceiptItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([purchaseOrderId])
   @@map("purchase_order_items")
+}
+
+enum GoodsReceiptStatus {
+  PARTIAL
+  COMPLETED
+}
+
+model GoodsReceipt {
+  id              Int                @id @default(autoincrement())
+  receiptNumber   String             @unique @db.VarChar(50)
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id])
+  receivedDate    DateTime           @default(now())
+  receivedBy      String?            @db.VarChar(150)
+  notes           String?            @db.Text
+  status          GoodsReceiptStatus @default(PARTIAL)
+  items           GoodsReceiptItem[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([status])
+  @@index([receivedDate])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptItem {
+  id Int @id @default(autoincrement())
+
+  goodsReceiptId Int
+  goodsReceipt   GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+
+  purchaseOrderItemId Int
+  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id])
+
+  quantityReceived Int @default(0)
+  quantityDamaged  Int @default(0)
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([goodsReceiptId, purchaseOrderItemId])
+  @@index([purchaseOrderItemId])
+  @@map("goods_receipt_items")
 }
