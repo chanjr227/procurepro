@@ -87,10 +87,7 @@ const getGoodsReceiptOptions = async (req, res) => {
         const items = po.items
           .map((item) => {
             const quantityReceivedBefore = item.goodsReceiptItems.reduce(
-              (total, receiptItem) =>
-                total +
-                receiptItem.quantityReceived +
-                receiptItem.quantityDamaged,
+              (total, receiptItem) => total + receiptItem.quantityReceived,
               0,
             );
 
@@ -240,17 +237,13 @@ const createGoodsReceipt = async (req, res) => {
         }
 
         const previousQuantity = poItem.goodsReceiptItems.reduce(
-          (total, receiptItem) =>
-            total + receiptItem.quantityReceived + receiptItem.quantityDamaged,
+          (total, receiptItem) => total + receiptItem.quantityReceived,
           0,
         );
 
-        if (
-          previousQuantity + quantityReceived + quantityDamaged >
-          poItem.quantity
-        ) {
+        if (previousQuantity + quantityReceived > poItem.quantity) {
           throw new Error(
-            `Jumlah penerimaan untuk ${poItem.itemName} melebihi jumlah pesanan.`,
+            `Jumlah barang baik untuk ${poItem.itemName} melebihi jumlah pesanan.`,
           );
         }
 
@@ -288,13 +281,12 @@ const createGoodsReceipt = async (req, res) => {
       });
 
       const allItemsFulfilled = updatedItems.every((poItem) => {
-        const totalRecorded = poItem.goodsReceiptItems.reduce(
-          (total, receiptItem) =>
-            total + receiptItem.quantityReceived + receiptItem.quantityDamaged,
+        const totalReceived = poItem.goodsReceiptItems.reduce(
+          (total, receiptItem) => total + receiptItem.quantityReceived,
           0,
         );
 
-        return totalRecorded >= poItem.quantity;
+        return totalReceived >= poItem.quantity;
       });
 
       const updatedReceipt = await tx.goodsReceipt.update({
