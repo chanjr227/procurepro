@@ -2,38 +2,48 @@ const express = require("express");
 const cors = require("cors");
 const prisma = require("./src/lib/prisma");
 
+require("dotenv").config();
+
 const authRoutes = require("./src/routes/authRoutes");
 const vendorRoutes = require("./src/routes/vendorRoutes");
-
 const requisitionRoutes = require("./src/routes/requisitionRoutes");
-
 const approvalRoutes = require("./src/routes/approvalRoutes");
-
 const purchaseOrderRoutes = require("./src/routes/purchaseOrderRoutes");
-
 const goodsReceiptRoutes = require("./src/routes/goodsReceiptRoutes");
-
-require("dotenv").config();
+const inventoryRoutes = require("./src/routes/inventoryRoutes");
+const warehouseRoutes = require("./src/routes/warehouseRoutes");
+const stockTransactionRoutes = require("./src/routes/stockTransactionRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware HARUS sebelum routes
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// console.log("=== CEK ROUTES ===");
+// console.log("authRoutes:", typeof authRoutes);
+// console.log("vendorRoutes:", typeof vendorRoutes);
+// console.log("requisitionRoutes:", typeof requisitionRoutes);
+// console.log("approvalRoutes:", typeof approvalRoutes);
+// console.log("purchaseOrderRoutes:", typeof purchaseOrderRoutes);
+// console.log("goodsReceiptRoutes:", typeof goodsReceiptRoutes);
+// console.log("inventoryRoutes:", typeof inventoryRoutes);
+// console.log("warehouseRoutes:", typeof warehouseRoutes);
+// console.log("stockTransactionRoutes:", typeof stockTransactionRoutes);
+// console.log("==================");
+
 // Routes API
 app.use("/api/auth", authRoutes);
 app.use("/api/vendors", vendorRoutes);
-
 app.use("/api/requisitions", requisitionRoutes);
-
 app.use("/api/approvals", approvalRoutes);
-
 app.use("/api/purchase-orders", purchaseOrderRoutes);
-
 app.use("/api/goods-receipts", goodsReceiptRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/warehouses", warehouseRoutes);
+app.use("/api/stock-transactions", stockTransactionRoutes);
 
 // Homepage
 app.get("/", (req, res) => {

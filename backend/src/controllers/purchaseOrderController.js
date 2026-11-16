@@ -1,5 +1,8 @@
 const prisma = require("../lib/prisma");
 
+// =====================================================
+// INCLUDE DATA PURCHASE ORDER
+// =====================================================
 const purchaseOrderInclude = {
   vendor: {
     select: {
@@ -22,9 +25,16 @@ const purchaseOrderInclude = {
       items: true,
     },
   },
-  items: true,
+  items: {
+    include: {
+      inventoryItem: true,
+    },
+  },
 };
 
+// =====================================================
+// HELPER
+// =====================================================
 const sendError = (res, error, fallback) => {
   console.error(fallback, error);
 
@@ -55,7 +65,31 @@ const generatePONumber = () => {
   return `PO-${year}-${Date.now()}`;
 };
 
+// Validasi Inventory Item
+const validateInventoryItem = async (tx, inventoryItemId, itemName) => {
+  const id = Number(inventoryItemId);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw createError(`Inventory Item untuk barang ${itemName} wajib dipilih.`);
+  }
+
+  const inventoryItem = await tx.inventoryItem.findUnique({
+    where: { id },
+  });
+
+  if (!inventoryItem || !inventoryItem.isActive) {
+    throw createError(
+      `Inventory Item untuk barang ${itemName} tidak ditemukan atau tidak aktif.`,
+    );
+  }
+
+  return inventoryItem.id;
+};
+
+// =====================================================
+// GET PURCHASE ORDERS
 // GET /api/purchase-orders
+// =====================================================
 const getPurchaseOrders = async (req, res) => {
   try {
     const { search = "", status = "" } = req.query;
@@ -132,10 +166,13 @@ const getPurchaseOrders = async (req, res) => {
   }
 };
 
+// =====================================================
+// GET PURCHASE ORDER OPTIONS
 // GET /api/purchase-orders/options
+// =====================================================
 const getPurchaseOrderOptions = async (req, res) => {
   try {
-    const [vendors, requisitions] = await Promise.all([
+    const [vendors, requisitions, inventoryItems] = await Promise.all([
       prisma.vendor.findMany({
         where: {
           status: "ACTIVE",
@@ -169,6 +206,23 @@ const getPurchaseOrderOptions = async (req, res) => {
           createdAt: "desc",
         },
       }),
+
+      prisma.inventoryItem.findMany({
+        where: {
+          isActive: true,
+        },
+        select: {
+          id: true,
+          itemCode: true,
+          itemName: true,
+          category: true,
+          unit: true,
+          minimumStock: true,
+        },
+        orderBy: {
+          itemName: "asc",
+        },
+      }),
     ]);
 
     return res.json({
@@ -176,18 +230,22 @@ const getPurchaseOrderOptions = async (req, res) => {
       data: {
         vendors,
         requisitions,
+        inventoryItems,
       },
     });
   } catch (error) {
     return sendError(
       res,
       error,
-      "Gagal mengambil pilihan Vendor dan Requisition.",
+      "Gagal mengambil pilihan Vendor, Requisition, dan Inventory.",
     );
   }
 };
 
+// =====================================================
+// GET PURCHASE ORDER DETAIL
 // GET /api/purchase-orders/:id
+// =====================================================
 const getPurchaseOrderDetail = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -220,12 +278,16 @@ const getPurchaseOrderDetail = async (req, res) => {
   }
 };
 
+// =====================================================
+// CREATE PURCHASE ORDER
 // POST /api/purchase-orders
+// =====================================================
 const createPurchaseOrder = async (req, res) => {
   try {
     const requisitionId = Number(req.body.requisitionId);
     const vendorId = Number(req.body.vendorId);
     const tax = toMoney(req.body.tax ?? 0);
+
     const notes =
       typeof req.body.notes === "string" ? req.body.notes.trim() : null;
 
@@ -255,7 +317,9 @@ const createPurchaseOrder = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       const requisition = await tx.requisition.findUnique({
         where: { id: requisitionId },
-        include: { items: true },
+        include: {
+          items: true,
+        },
       });
 
       if (!requisition) {
@@ -297,25 +361,37 @@ const createPurchaseOrder = async (req, res) => {
         !Array.isArray(inputItems) ||
         inputItems.length !== requisition.items.length
       ) {
-        throw createError("Daftar harga item tidak sesuai dengan Requisition.");
+        throw createError(
+          "Daftar harga dan Inventory Item tidak sesuai dengan Requisition.",
+        );
       }
 
-      const items = requisition.items.map((source, index) => {
+      const items = [];
+
+      for (let index = 0; index < requisition.items.length; index++) {
+        const source = requisition.items[index];
         const input = inputItems[index];
 
         const unitPrice = toMoney(input?.unitPrice);
 
+        const inventoryItemId = await validateInventoryItem(
+          tx,
+          input?.inventoryItemId,
+          source.itemName,
+        );
+
         const totalPrice = Math.round(source.quantity * unitPrice * 100) / 100;
 
-        return {
+        items.push({
           itemName: source.itemName,
           description: source.description,
           quantity: source.quantity,
           unit: source.unit,
           unitPrice,
           totalPrice,
-        };
-      });
+          inventoryItemId,
+        });
+      }
 
       const subtotal =
         Math.round(
@@ -355,7 +431,10 @@ const createPurchaseOrder = async (req, res) => {
   }
 };
 
+// =====================================================
+// UPDATE PURCHASE ORDER
 // PUT /api/purchase-orders/:id
+// =====================================================
 const updatePurchaseOrder = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -370,7 +449,9 @@ const updatePurchaseOrder = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       const existing = await tx.purchaseOrder.findUnique({
         where: { id },
-        include: { items: true },
+        include: {
+          items: true,
+        },
       });
 
       if (!existing) {
@@ -426,23 +507,42 @@ const updatePurchaseOrder = async (req, res) => {
           throw createError("Jumlah item tidak boleh diubah.");
         }
 
-        const items = existing.items.map((source, index) => {
+        const updatedItems = [];
+
+        for (let index = 0; index < existing.items.length; index++) {
+          const source = existing.items[index];
           const input = req.body.items[index];
+
           const unitPrice = toMoney(input?.unitPrice);
 
-          return {
-            itemName: source.itemName,
-            description: source.description,
-            quantity: source.quantity,
-            unit: source.unit,
+          // Jika inventoryItemId tidak dikirim,
+          // pertahankan hubungan Inventory Item sebelumnya.
+          const inventoryItemId =
+            input?.inventoryItemId !== undefined
+              ? await validateInventoryItem(
+                  tx,
+                  input.inventoryItemId,
+                  source.itemName,
+                )
+              : source.inventoryItemId;
+
+          if (!inventoryItemId) {
+            throw createError(
+              `Inventory Item untuk barang ${source.itemName} wajib dipilih.`,
+            );
+          }
+
+          updatedItems.push({
+            id: source.id,
             unitPrice,
             totalPrice: Math.round(source.quantity * unitPrice * 100) / 100,
-          };
-        });
+            inventoryItemId,
+          });
+        }
 
-        data.subtotal =
+        const subtotal =
           Math.round(
-            items.reduce((sum, item) => sum + item.totalPrice, 0) * 100,
+            updatedItems.reduce((sum, item) => sum + item.totalPrice, 0) * 100,
           ) / 100;
 
         const tax =
@@ -450,16 +550,25 @@ const updatePurchaseOrder = async (req, res) => {
             ? toMoney(req.body.tax)
             : Number(existing.tax);
 
+        data.subtotal = subtotal;
         data.tax = tax;
-        data.totalAmount = Math.round((data.subtotal + tax) * 100) / 100;
+        data.totalAmount = Math.round((subtotal + tax) * 100) / 100;
 
-        await tx.purchaseOrderItem.deleteMany({
-          where: { purchaseOrderId: id },
-        });
-
-        data.items = {
-          create: items,
-        };
+        // Update item satu per satu.
+        // Tidak menghapus PurchaseOrderItem,
+        // sehingga relasi Goods Receipt tetap aman.
+        for (const item of updatedItems) {
+          await tx.purchaseOrderItem.update({
+            where: {
+              id: item.id,
+            },
+            data: {
+              unitPrice: item.unitPrice,
+              totalPrice: item.totalPrice,
+              inventoryItemId: item.inventoryItemId,
+            },
+          });
+        }
       } else if (req.body.tax !== undefined) {
         const tax = toMoney(req.body.tax);
 
@@ -485,13 +594,16 @@ const updatePurchaseOrder = async (req, res) => {
   }
 };
 
+// =====================================================
+// UPDATE PURCHASE ORDER STATUS
 // PATCH /api/purchase-orders/:id/status
+// =====================================================
 const updatePurchaseOrderStatus = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { status } = req.body;
 
-    const allowedStatuses = ["DRAFT", "SENT", "COMPLETED", "CANCELLED"];
+    const allowedStatuses = ["DRAFT", "SENT", "CANCELLED"];
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({
@@ -503,7 +615,8 @@ const updatePurchaseOrderStatus = async (req, res) => {
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Status Purchase Order tidak valid.",
+        message:
+          "Status tidak valid. COMPLETED hanya dapat ditentukan melalui Goods Receipt.",
       });
     }
 
@@ -520,12 +633,12 @@ const updatePurchaseOrderStatus = async (req, res) => {
 
     const transitions = {
       DRAFT: ["SENT", "CANCELLED"],
-      SENT: ["COMPLETED", "CANCELLED"],
+      SENT: ["CANCELLED"],
       COMPLETED: [],
       CANCELLED: [],
     };
 
-    if (!transitions[existing.status].includes(status)) {
+    if (!transitions[existing.status]?.includes(status)) {
       return res.status(400).json({
         success: false,
         message: `Status tidak dapat diubah dari ${existing.status} ke ${status}.`,
@@ -548,6 +661,9 @@ const updatePurchaseOrderStatus = async (req, res) => {
   }
 };
 
+// =====================================================
+// EXPORT
+// =====================================================
 module.exports = {
   getPurchaseOrders,
   getPurchaseOrderOptions,

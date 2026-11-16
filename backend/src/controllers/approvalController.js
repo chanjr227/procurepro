@@ -6,7 +6,7 @@ const prisma = require("../lib/prisma");
 const checkApprover = (req, res) => {
   const allowedRoles = ["SUPER_ADMIN", "PROCUREMENT_MANAGER"];
 
-  if (!allowedRoles.includes(req.user.role)) {
+  if (!req.user || !allowedRoles.includes(req.user.role)) {
     res.status(403).json({
       success: false,
       message: "Anda tidak memiliki akses untuk melakukan approval.",
@@ -19,8 +19,16 @@ const checkApprover = (req, res) => {
 };
 
 // ==========================================
-// HELPER: Mengambil data requisition dengan aman
-// Tidak mengirim passwordHash ke frontend
+// HELPER: Mengambil ID user yang login
+// ==========================================
+const getUserId = (req) => {
+  const userId = Number(req.user?.userId);
+
+  return Number.isInteger(userId) && userId > 0 ? userId : null;
+};
+
+// ==========================================
+// INCLUDE REQUISITION
 // ==========================================
 const requisitionInclude = {
   requestedBy: {
@@ -41,7 +49,7 @@ const requisitionInclude = {
 };
 
 // ==========================================
-// GET: Daftar pengajuan yang menunggu approval
+// GET: PENDING APPROVALS
 // ==========================================
 const getPendingApprovals = async (req, res) => {
   try {
@@ -51,15 +59,13 @@ const getPendingApprovals = async (req, res) => {
       where: {
         status: "PENDING",
       },
-      include: {
-        ...requisitionInclude,
-      },
+      include: requisitionInclude,
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Daftar pengajuan pending berhasil diambil.",
       data: requisitions,
@@ -75,7 +81,7 @@ const getPendingApprovals = async (req, res) => {
 };
 
 // ==========================================
-// GET: Detail pengajuan berdasarkan ID
+// GET: DETAIL APPROVAL
 // ==========================================
 const getApprovalDetail = async (req, res) => {
   try {
@@ -94,7 +100,6 @@ const getApprovalDetail = async (req, res) => {
       where: { id },
       include: {
         ...requisitionInclude,
-
         approvalHistory: {
           include: {
             actor: {
@@ -119,7 +124,7 @@ const getApprovalDetail = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       data: requisition,
     });
@@ -134,16 +139,17 @@ const getApprovalDetail = async (req, res) => {
 };
 
 // ==========================================
-// POST: Menyetujui pengajuan
+// POST: APPROVE REQUISITION
 // ==========================================
 const approveRequisition = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;
 
     const id = Number(req.params.id);
-    const userId = Number(req.user.userId);
+    const userId = getUserId(req);
+
     const comments =
-      typeof req.body.comments === "string"
+      typeof req.body?.comments === "string"
         ? req.body.comments.trim() || null
         : null;
 
@@ -154,8 +160,15 @@ const approveRequisition = async (req, res) => {
       });
     }
 
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "ID pengguna login tidak valid. Silakan login kembali.",
+      });
+    }
+
     const result = await prisma.$transaction(async (tx) => {
-      // Cari requisition
+      // Pastikan requisition tersedia
       const requisition = await tx.requisition.findUnique({
         where: { id },
       });
@@ -166,8 +179,8 @@ const approveRequisition = async (req, res) => {
         throw error;
       }
 
-      // Mencegah approval sendiri
-      if (requisition.requestedById === userId) {
+      // User tidak boleh menyetujui pengajuan sendiri
+      if (Number(requisition.requestedById) === userId) {
         const error = new Error(
           "Anda tidak dapat menyetujui pengajuan sendiri.",
         );
@@ -175,14 +188,16 @@ const approveRequisition = async (req, res) => {
         throw error;
       }
 
-      // Periksa status
+      // Pastikan status masih pending
       if (requisition.status !== "PENDING") {
-        const error = new Error("Pengajuan ini tidak lagi menunggu approval.");
-        error.statusCode = 400;
+        const error = new Error(
+          `Pengajuan sudah diproses. Status saat ini: ${requisition.status}.`,
+        );
+        error.statusCode = 409;
         throw error;
       }
 
-      // Update status secara atomik
+      // Update status requisition
       const updated = await tx.requisition.updateMany({
         where: {
           id,
@@ -195,8 +210,10 @@ const approveRequisition = async (req, res) => {
         },
       });
 
-      if (updated.count === 0) {
-        const error = new Error("Pengajuan sudah diproses oleh pengguna lain.");
+      if (updated.count !== 1) {
+        const error = new Error(
+          "Status requisition gagal diperbarui atau sudah diproses pengguna lain.",
+        );
         error.statusCode = 409;
         throw error;
       }
@@ -211,14 +228,24 @@ const approveRequisition = async (req, res) => {
         },
       });
 
-      // Ambil data terbaru
-      return await tx.requisition.findUnique({
+      // Ambil data terbaru setelah update
+      const updatedRequisition = await tx.requisition.findUnique({
         where: { id },
         include: requisitionInclude,
       });
+
+      if (!updatedRequisition || updatedRequisition.status !== "APPROVED") {
+        const error = new Error(
+          "Status requisition belum berhasil diperbarui.",
+        );
+        error.statusCode = 500;
+        throw error;
+      }
+
+      return updatedRequisition;
     });
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Requisition berhasil disetujui.",
       data: result,
@@ -230,23 +257,23 @@ const approveRequisition = async (req, res) => {
       success: false,
       message: error.statusCode
         ? error.message
-        : "Gagal menyetujui requisition.",
+        : "Gagal menyetujui requisition. Periksa log backend.",
     });
   }
 };
 
 // ==========================================
-// POST: Menolak pengajuan
+// POST: REJECT REQUISITION
 // ==========================================
 const rejectRequisition = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;
 
     const id = Number(req.params.id);
-    const userId = Number(req.user.userId);
+    const userId = getUserId(req);
 
     const comments =
-      typeof req.body.comments === "string" ? req.body.comments.trim() : "";
+      typeof req.body?.comments === "string" ? req.body.comments.trim() : "";
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({
@@ -255,7 +282,13 @@ const rejectRequisition = async (req, res) => {
       });
     }
 
-    // Alasan penolakan wajib diisi
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "ID pengguna login tidak valid. Silakan login kembali.",
+      });
+    }
+
     if (!comments) {
       return res.status(400).json({
         success: false,
@@ -264,7 +297,6 @@ const rejectRequisition = async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // Cari requisition
       const requisition = await tx.requisition.findUnique({
         where: { id },
       });
@@ -275,21 +307,20 @@ const rejectRequisition = async (req, res) => {
         throw error;
       }
 
-      // Mencegah penolakan sendiri
-      if (requisition.requestedById === userId) {
+      if (Number(requisition.requestedById) === userId) {
         const error = new Error("Anda tidak dapat menolak pengajuan sendiri.");
         error.statusCode = 403;
         throw error;
       }
 
-      // Periksa status
       if (requisition.status !== "PENDING") {
-        const error = new Error("Pengajuan ini tidak lagi menunggu approval.");
-        error.statusCode = 400;
+        const error = new Error(
+          `Pengajuan sudah diproses. Status saat ini: ${requisition.status}.`,
+        );
+        error.statusCode = 409;
         throw error;
       }
 
-      // Update status secara atomik
       const updated = await tx.requisition.updateMany({
         where: {
           id,
@@ -302,13 +333,12 @@ const rejectRequisition = async (req, res) => {
         },
       });
 
-      if (updated.count === 0) {
-        const error = new Error("Pengajuan sudah diproses oleh pengguna lain.");
+      if (updated.count !== 1) {
+        const error = new Error("Pengajuan sudah diproses pengguna lain.");
         error.statusCode = 409;
         throw error;
       }
 
-      // Simpan riwayat penolakan
       await tx.approvalHistory.create({
         data: {
           requisitionId: id,
@@ -318,14 +348,13 @@ const rejectRequisition = async (req, res) => {
         },
       });
 
-      // Ambil data terbaru
-      return await tx.requisition.findUnique({
+      return tx.requisition.findUnique({
         where: { id },
         include: requisitionInclude,
       });
     });
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Requisition berhasil ditolak.",
       data: result,
@@ -341,7 +370,7 @@ const rejectRequisition = async (req, res) => {
 };
 
 // ==========================================
-// GET: Semua riwayat approval
+// GET: APPROVAL HISTORY
 // ==========================================
 const getApprovalHistory = async (req, res) => {
   try {
@@ -371,7 +400,7 @@ const getApprovalHistory = async (req, res) => {
       },
     });
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Riwayat approval berhasil diambil.",
       data: history,
@@ -387,7 +416,7 @@ const getApprovalHistory = async (req, res) => {
 };
 
 // ==========================================
-// EXPORT CONTROLLER
+// EXPORT
 // ==========================================
 module.exports = {
   getPendingApprovals,

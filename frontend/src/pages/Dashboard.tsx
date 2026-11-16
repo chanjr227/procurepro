@@ -6,6 +6,7 @@ import Requisitions from "./Requisitions";
 import ApprovalManagement from "./ApprovalManagement";
 import PurchaseOrders from "./PurchaseOrders";
 import GoodsReceipt from "./GoodsReceipt";
+import InventoryItems from "./InventoryItems";
 
 const stats = [
   {
@@ -119,6 +120,15 @@ const menuGroups = [
       { label: "User Management", icon: "♧" },
     ],
   },
+  {
+    title: "INVENTORY MANAGEMENT",
+    items: [
+      { label: "Inventory Items", icon: "▤" },
+      { label: "Warehouses", icon: "▦" },
+      { label: "Inventory Stock", icon: "▧" },
+      { label: "Stock Transactions", icon: "↔" },
+    ],
+  },
 ];
 
 interface DashboardProps {
@@ -152,6 +162,8 @@ export default function Dashboard({
       setActiveMenu("Purchase Orders");
     } else if (activePage === "goods-receipts") {
       setActiveMenu("Goods Receipt");
+    } else if (activePage === "inventory-items") {
+      setActiveMenu("Inventory Items");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -167,6 +179,11 @@ export default function Dashboard({
 
     if (label === "Requisitions") {
       onNavigate("requisitions");
+      return;
+    }
+
+    if (label === "Inventory Items") {
+      onNavigate("inventory-items");
       return;
     }
 
@@ -320,6 +337,8 @@ export default function Dashboard({
             <PurchaseOrders />
           ) : activePage === "goods-receipts" ? (
             <GoodsReceipt />
+          ) : activePage === "inventory-items" ? (
+            <InventoryItems />
           ) : (
             <>
               <section className="dashboard-welcome">

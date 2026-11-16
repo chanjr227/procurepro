@@ -119,7 +119,7 @@ export default function ApprovalManagement() {
   };
 
   const handleApprove = async () => {
-    if (!selected) return;
+    if (!selected || processing) return;
 
     const confirmed = window.confirm(
       `Setujui requisition ${selected.requestNumber}?`,
@@ -131,14 +131,31 @@ export default function ApprovalManagement() {
       setProcessing(true);
       setError("");
 
-      await api.post(`/approvals/${selected.id}/approve`, {});
+      const response = await api.post(`/approvals/${selected.id}/approve`, {});
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.message || "Approval gagal diproses.");
+      }
+
+      if (response.data.data?.status !== "APPROVED") {
+        throw new Error(
+          "Approval tercatat, tetapi status Requisition belum berubah menjadi APPROVED.",
+        );
+      }
 
       setSelected(null);
+      setShowReject(false);
+      setRejectReason("");
+
       await loadData();
 
       window.alert("Requisition berhasil disetujui.");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Gagal menyetujui requisition.");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Gagal menyetujui requisition.",
+      );
     } finally {
       setProcessing(false);
     }

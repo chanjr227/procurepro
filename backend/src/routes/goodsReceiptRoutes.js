@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const authenticate = require("../middleware/authMiddleware");
-
 const {
   getGoodsReceipts,
   getGoodsReceiptOptions,
@@ -10,11 +8,13 @@ const {
   createGoodsReceipt,
 } = require("../controllers/goodsReceiptController");
 
-router.use(authenticate);
+const authMiddleware = require("../middleware/authMiddleware");
+
+router.use(authMiddleware);
 
 router.get("/options", getGoodsReceiptOptions);
 router.get("/", getGoodsReceipts);
-router.get("/:id", getGoodsReceiptDetail);
 router.post("/", createGoodsReceipt);
+router.get("/:id", getGoodsReceiptDetail);
 
 module.exports = router;

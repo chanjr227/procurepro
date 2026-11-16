@@ -14,6 +14,13 @@ interface Vendor {
   vendorCode?: string;
 }
 
+interface Warehouse {
+  id: number;
+  warehouseCode: string;
+  warehouseName: string;
+  isActive: boolean;
+}
+
 interface POItem {
   id: number;
   itemName: string;
@@ -53,6 +60,7 @@ interface GoodsReceipt {
   receivedBy: string;
   notes?: string | null;
   status: ReceiptStatus;
+  warehouse?: Warehouse | null;
   purchaseOrder: {
     id: number;
     poNumber: string;
@@ -108,6 +116,7 @@ export default function GoodsReceipt() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>(
     [],
   );
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -126,6 +135,7 @@ export default function GoodsReceipt() {
 
   const [form, setForm] = useState({
     purchaseOrderId: "",
+    warehouseId: "",
     receivedDate: new Date().toISOString().slice(0, 10),
     notes: "",
   });
@@ -139,7 +149,6 @@ export default function GoodsReceipt() {
   const loadReceipts = async () => {
     try {
       setLoading(true);
-      setErrorMessage("");
 
       const params: Record<string, string> = {};
 
@@ -151,7 +160,9 @@ export default function GoodsReceipt() {
         params.status = statusFilter;
       }
 
-      const response = await api.get("/goods-receipts", { params });
+      const response = await api.get("/goods-receipts", {
+        params,
+      });
 
       setReceipts(response.data.data || []);
     } catch (error) {
@@ -162,7 +173,7 @@ export default function GoodsReceipt() {
   };
 
   // =====================================
-  // LOAD PURCHASE ORDER OPTIONS
+  // LOAD PURCHASE ORDER + WAREHOUSE
   // =====================================
 
   const loadPurchaseOrders = async () => {
@@ -172,6 +183,7 @@ export default function GoodsReceipt() {
       const response = await api.get("/goods-receipts/options");
 
       setPurchaseOrders(response.data.data || []);
+      setWarehouses(response.data.warehouses || []);
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
     } finally {
@@ -273,10 +285,20 @@ export default function GoodsReceipt() {
       return "Pilih Purchase Order terlebih dahulu.";
     }
 
+    if (!form.warehouseId) {
+      return "Pilih gudang terlebih dahulu.";
+    }
+
+    if (!form.receivedDate) {
+      return "Tanggal penerimaan wajib diisi.";
+    }
+
+    if (warehouses.length === 0) {
+      return "Belum ada gudang aktif. Tambahkan gudang terlebih dahulu.";
+    }
+
     const filledItems = formItems.filter(
-      (item) =>
-        Number(item.quantityReceived || 0) > 0 ||
-        Number(item.quantityDamaged || 0) > 0,
+      (item) => item.quantityReceived !== "" || item.quantityDamaged !== "",
     );
 
     if (filledItems.length === 0) {
@@ -293,7 +315,11 @@ export default function GoodsReceipt() {
         received < 0 ||
         damaged < 0
       ) {
-        return `Jumlah ${item.itemName} harus berupa bilangan bulat positif atau nol.`;
+        return `Jumlah ${item.itemName} harus berupa bilangan bulat minimal 0.`;
+      }
+
+      if (received + damaged <= 0) {
+        return `Isi jumlah barang ${item.itemName}.`;
       }
 
       if (received + damaged > item.remainingQuantity) {
@@ -302,7 +328,13 @@ export default function GoodsReceipt() {
     }
 
     return "";
-  }, [form.purchaseOrderId, formItems]);
+  }, [
+    form.purchaseOrderId,
+    form.warehouseId,
+    form.receivedDate,
+    formItems,
+    warehouses.length,
+  ]);
 
   // =====================================
   // RESET FORM
@@ -311,6 +343,7 @@ export default function GoodsReceipt() {
   const resetForm = () => {
     setForm({
       purchaseOrderId: "",
+      warehouseId: "",
       receivedDate: new Date().toISOString().slice(0, 10),
       notes: "",
     });
@@ -351,12 +384,15 @@ export default function GoodsReceipt() {
 
       await api.post("/goods-receipts", {
         purchaseOrderId: Number(form.purchaseOrderId),
+        warehouseId: Number(form.warehouseId),
         receivedDate: form.receivedDate,
         notes: form.notes,
         items,
       });
 
-      setSuccessMessage("Goods Receipt berhasil dibuat.");
+      setSuccessMessage(
+        "Goods Receipt berhasil dibuat dan stok gudang berhasil diperbarui.",
+      );
 
       resetForm();
 
@@ -394,7 +430,9 @@ export default function GoodsReceipt() {
       <div className="po-header">
         <div>
           <span className="po-eyebrow">PROCUREMENT MANAGEMENT</span>
+
           <h1>Goods Receipt</h1>
+
           <p>
             Kelola penerimaan barang berdasarkan Purchase Order dari vendor.
           </p>
@@ -418,6 +456,7 @@ export default function GoodsReceipt() {
       {errorMessage && (
         <div className="po-alert po-alert-error">
           {errorMessage}
+
           <button type="button" onClick={() => setErrorMessage("")}>
             ×
           </button>
@@ -427,6 +466,7 @@ export default function GoodsReceipt() {
       {successMessage && (
         <div className="po-alert po-alert-success">
           {successMessage}
+
           <button type="button" onClick={() => setSuccessMessage("")}>
             ×
           </button>
@@ -467,7 +507,7 @@ export default function GoodsReceipt() {
             <div>
               <h2>Create Goods Receipt</h2>
               <p>
-                Pilih Purchase Order dan masukkan jumlah barang yang diterima.
+                Pilih Purchase Order, gudang, dan jumlah barang yang diterima.
               </p>
             </div>
 
@@ -482,6 +522,7 @@ export default function GoodsReceipt() {
 
           <form onSubmit={handleCreate}>
             <div className="po-form-grid">
+              {/* PURCHASE ORDER */}
               <label>
                 Purchase Order
                 <select
@@ -490,6 +531,7 @@ export default function GoodsReceipt() {
                     handlePurchaseOrderChange(event.target.value)
                   }
                   required
+                  disabled={loadingOptions}
                 >
                   <option value="">Pilih Purchase Order</option>
 
@@ -510,31 +552,68 @@ export default function GoodsReceipt() {
                 )}
               </label>
 
+              {/* WAREHOUSE */}
+              <label>
+                Gudang
+                <select
+                  value={form.warehouseId}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      warehouseId: event.target.value,
+                    }))
+                  }
+                  required
+                  disabled={loadingOptions || warehouses.length === 0}
+                >
+                  <option value="">
+                    {loadingOptions ? "Memuat gudang..." : "Pilih Gudang"}
+                  </option>
+
+                  {warehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.id}>
+                      {warehouse.warehouseCode
+                        ? `${warehouse.warehouseCode} - `
+                        : ""}
+                      {warehouse.warehouseName}
+                    </option>
+                  ))}
+                </select>
+                {!loadingOptions && warehouses.length === 0 && (
+                  <small>
+                    Belum ada gudang aktif. Tambahkan gudang melalui menu
+                    Warehouse.
+                  </small>
+                )}
+              </label>
+
+              {/* RECEIVED DATE */}
               <label>
                 Received Date
                 <input
                   type="date"
                   value={form.receivedDate}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
+                    setForm((previous) => ({
+                      ...previous,
                       receivedDate: event.target.value,
-                    })
+                    }))
                   }
                   required
                 />
               </label>
 
+              {/* NOTES */}
               <label>
                 Notes
                 <input
                   type="text"
                   value={form.notes}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
+                    setForm((previous) => ({
+                      ...previous,
                       notes: event.target.value,
-                    })
+                    }))
                   }
                   placeholder="Catatan penerimaan barang"
                 />
@@ -624,12 +703,14 @@ export default function GoodsReceipt() {
                   </table>
                 </div>
 
+                {/* ITEM NOTES */}
                 <div className="gr-item-notes">
                   <h3>Item Notes</h3>
 
                   {formItems.map((item, index) => (
                     <label key={item.purchaseOrderItemId}>
                       {item.itemName}
+
                       <input
                         type="text"
                         value={item.notes}
@@ -644,14 +725,17 @@ export default function GoodsReceipt() {
 
                 <div className="gr-form-info">
                   <strong>Informasi:</strong>
+
                   <span>
                     Jumlah diterima + jumlah rusak tidak boleh melebihi sisa
-                    kuantitas Purchase Order.
+                    kuantitas Purchase Order. Barang rusak tidak akan menambah
+                    stok Inventory.
                   </span>
                 </div>
               </div>
             )}
 
+            {/* FORM ACTIONS */}
             <div className="po-form-actions">
               <button
                 type="button"
@@ -668,6 +752,7 @@ export default function GoodsReceipt() {
                   saving ||
                   loadingOptions ||
                   !formItems.length ||
+                  warehouses.length === 0 ||
                   Boolean(validationMessage)
                 }
                 title={validationMessage || "Simpan Goods Receipt"}
@@ -822,6 +907,13 @@ export default function GoodsReceipt() {
                 <small>Vendor</small>
                 <strong>
                   {selectedReceipt.purchaseOrder?.vendor?.companyName || "-"}
+                </strong>
+              </div>
+
+              <div>
+                <small>Warehouse</small>
+                <strong>
+                  {selectedReceipt.warehouse?.warehouseName || "-"}
                 </strong>
               </div>
 

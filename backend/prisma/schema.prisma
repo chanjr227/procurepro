@@ -207,6 +207,9 @@ model PurchaseOrderItem {
 
   goodsReceiptItems GoodsReceiptItem[]
 
+  inventoryItemId Int?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -232,6 +235,9 @@ model GoodsReceipt {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
+  warehouseId Int?
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+
   @@index([purchaseOrderId])
   @@index([status])
   @@index([receivedDate])
@@ -250,6 +256,8 @@ model GoodsReceiptItem {
   quantityReceived Int @default(0)
   quantityDamaged  Int @default(0)
 
+  stockTransaction StockTransaction?
+
   notes String? @db.Text
 
   createdAt DateTime @default(now())
@@ -258,4 +266,112 @@ model GoodsReceiptItem {
   @@unique([goodsReceiptId, purchaseOrderItemId])
   @@index([purchaseOrderItemId])
   @@map("goods_receipt_items")
+}
+
+// ==========================================
+// INVENTORY MANAGEMENT
+// ==========================================
+
+enum StockTransactionType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+// Master barang
+model InventoryItem {
+  id          Int     @id @default(autoincrement())
+  itemCode    String  @unique @db.VarChar(50)
+  itemName    String  @db.VarChar(200)
+  description String? @db.Text
+  category    String? @db.VarChar(100)
+  unit        String  @db.VarChar(50)
+
+  minimumStock Int     @default(0)
+  isActive     Boolean @default(true)
+
+  purchaseOrderItems PurchaseOrderItem[]
+  stocks             InventoryStock[]
+  transactions       StockTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([itemName])
+  @@index([category])
+  @@map("inventory_items")
+}
+
+// Data gudang
+model Warehouse {
+  id            Int     @id @default(autoincrement())
+  warehouseCode String  @unique @db.VarChar(50)
+  warehouseName String  @db.VarChar(150)
+  address       String? @db.Text
+  description   String? @db.Text
+  isActive      Boolean @default(true)
+
+  goodsReceipts GoodsReceipt[]
+  stocks        InventoryStock[]
+  transactions  StockTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("warehouses")
+}
+
+// Stok barang per gudang
+model InventoryStock {
+  id Int @id @default(autoincrement())
+
+  inventoryItemId Int
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  quantity Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([inventoryItemId, warehouseId])
+  @@index([warehouseId])
+  @@map("inventory_stocks")
+}
+
+// Riwayat transaksi stok
+model StockTransaction {
+  id Int @id @default(autoincrement())
+
+  transactionNumber String               @unique @db.VarChar(50)
+  transactionType   StockTransactionType
+
+  inventoryItemId Int
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  // Positif untuk stok masuk, negatif untuk stok keluar
+  quantityChange Int
+
+  stockBefore Int
+  stockAfter  Int
+
+  referenceNumber String? @db.VarChar(100)
+  notes           String? @db.Text
+  performedBy     String? @db.VarChar(150)
+
+  goodsReceiptItemId Int?              @unique
+  goodsReceiptItem   GoodsReceiptItem? @relation(fields: [goodsReceiptItemId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([inventoryItemId])
+  @@index([warehouseId])
+  @@index([transactionType])
+  @@index([createdAt])
+  @@map("stock_transactions")
 }

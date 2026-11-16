@@ -14,6 +14,15 @@ interface Vendor {
   email?: string | null;
 }
 
+interface InventoryItem {
+  id: number;
+  itemCode: string;
+  itemName: string;
+  category: string;
+  unit: string;
+  minimumStock: number;
+}
+
 interface RequisitionItem {
   id: number;
   itemName: string;
@@ -40,6 +49,8 @@ interface POItem {
   unit: string;
   unitPrice: number | string;
   totalPrice: number | string;
+  inventoryItemId: number | null;
+  inventoryItem?: InventoryItem | null;
 }
 
 interface PurchaseOrder {
@@ -71,6 +82,7 @@ interface POFormItem {
   unit: string;
   unitPrice: string;
   description?: string | null;
+  inventoryItemId: string;
 }
 
 const statusLabels: Record<POStatus, string> = {
@@ -108,10 +120,11 @@ const getErrorMessage = (error: unknown) => {
   return "Terjadi kesalahan. Silakan coba kembali.";
 };
 
+// Status COMPLETED dikelola otomatis oleh Goods Receipt.
 const getAllowedStatuses = (status: POStatus): POStatus[] => {
   const transitions: Record<POStatus, POStatus[]> = {
     DRAFT: ["SENT", "CANCELLED"],
-    SENT: ["COMPLETED", "CANCELLED"],
+    SENT: ["CANCELLED"],
     COMPLETED: [],
     CANCELLED: [],
   };
@@ -123,6 +136,7 @@ export default function PurchaseOrders() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
 
   const [search, setSearch] = useState("");
@@ -140,6 +154,10 @@ export default function PurchaseOrders() {
   );
 
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Menyimpan informasi Requisition ketika sedang edit PO.
+  const [editingRequisition, setEditingRequisition] =
+    useState<Requisition | null>(null);
 
   const [form, setForm] = useState({
     vendorId: "",
@@ -182,15 +200,18 @@ export default function PurchaseOrders() {
   };
 
   // =====================================
-  // LOAD VENDORS & REQUISITIONS
+  // LOAD OPTIONS
   // =====================================
 
   const loadOptions = async () => {
     try {
       const response = await api.get("/purchase-orders/options");
 
-      setVendors(response.data.data.vendors || []);
-      setRequisitions(response.data.data.requisitions || []);
+      const data = response.data.data;
+
+      setVendors(data.vendors || []);
+      setRequisitions(data.requisitions || []);
+      setInventoryItems(data.inventoryItems || []);
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
     }
@@ -247,6 +268,7 @@ export default function PurchaseOrders() {
         quantity: item.quantity,
         unit: item.unit,
         unitPrice: String(item.estimatedUnitPrice),
+        inventoryItemId: "",
       })),
     );
   };
@@ -282,11 +304,12 @@ export default function PurchaseOrders() {
 
     setFormItems([]);
     setEditingId(null);
+    setEditingRequisition(null);
     setShowForm(false);
   };
 
   // =====================================
-  // CREATE PURCHASE ORDER
+  // CREATE / UPDATE PURCHASE ORDER
   // =====================================
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
@@ -305,6 +328,7 @@ export default function PurchaseOrders() {
     if (
       formItems.some(
         (item) =>
+          item.unitPrice.trim() === "" ||
           !Number.isFinite(Number(item.unitPrice)) ||
           Number(item.unitPrice) < 0,
       )
@@ -313,18 +337,30 @@ export default function PurchaseOrders() {
       return;
     }
 
+    if (formItems.some((item) => !item.inventoryItemId)) {
+      alert("Pilih Inventory Item untuk semua barang.");
+      return;
+    }
+
+    if (!Number.isFinite(taxAmount) || taxAmount < 0) {
+      alert("Nominal pajak tidak valid.");
+      return;
+    }
+
     try {
       setSaving(true);
       setErrorMessage("");
+      setSuccessMessage("");
 
       const payload = {
         vendorId: Number(form.vendorId),
         requisitionId: Number(form.requisitionId),
-        tax: Number(form.tax || 0),
+        tax: taxAmount,
         notes: form.notes,
         deliveryDate: form.deliveryDate || null,
         items: formItems.map((item) => ({
           unitPrice: Number(item.unitPrice),
+          inventoryItemId: Number(item.inventoryItemId),
         })),
       };
 
@@ -345,6 +381,7 @@ export default function PurchaseOrders() {
       }
 
       resetForm();
+
       await loadOrders();
       await loadOptions();
     } catch (error) {
@@ -365,6 +402,7 @@ export default function PurchaseOrders() {
     }
 
     setEditingId(order.id);
+    setEditingRequisition(order.requisition);
 
     setForm({
       vendorId: String(order.vendorId),
@@ -381,6 +419,9 @@ export default function PurchaseOrders() {
         quantity: item.quantity,
         unit: item.unit,
         unitPrice: String(item.unitPrice),
+        inventoryItemId: item.inventoryItemId
+          ? String(item.inventoryItemId)
+          : "",
       })),
     );
 
@@ -396,6 +437,18 @@ export default function PurchaseOrders() {
     setFormItems((previous) =>
       previous.map((item, itemIndex) =>
         itemIndex === index ? { ...item, unitPrice: value } : item,
+      ),
+    );
+  };
+
+  // =====================================
+  // UPDATE INVENTORY ITEM
+  // =====================================
+
+  const updateInventoryItem = (index: number, value: string) => {
+    setFormItems((previous) =>
+      previous.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, inventoryItemId: value } : item,
       ),
     );
   };
@@ -418,6 +471,7 @@ export default function PurchaseOrders() {
 
     try {
       setErrorMessage("");
+      setSuccessMessage("");
 
       await api.patch(`/purchase-orders/${order.id}/status`, {
         status,
@@ -444,6 +498,10 @@ export default function PurchaseOrders() {
       setErrorMessage(getErrorMessage(error));
     }
   };
+
+  // =====================================
+  // RENDER
+  // =====================================
 
   return (
     <div className="po-page">
@@ -475,14 +533,18 @@ export default function PurchaseOrders() {
       {errorMessage && (
         <div className="po-alert po-alert-error">
           {errorMessage}
-          <button onClick={() => setErrorMessage("")}>×</button>
+          <button type="button" onClick={() => setErrorMessage("")}>
+            ×
+          </button>
         </div>
       )}
 
       {successMessage && (
         <div className="po-alert po-alert-success">
           {successMessage}
-          <button onClick={() => setSuccessMessage("")}>×</button>
+          <button type="button" onClick={() => setSuccessMessage("")}>
+            ×
+          </button>
         </div>
       )}
 
@@ -521,6 +583,7 @@ export default function PurchaseOrders() {
               <h2>
                 {editingId ? "Edit Purchase Order" : "Create Purchase Order"}
               </h2>
+
               <p>Masukkan informasi pesanan pembelian.</p>
             </div>
 
@@ -569,18 +632,18 @@ export default function PurchaseOrders() {
                 >
                   <option value="">Pilih Requisition</option>
 
+                  {editingId && editingRequisition && (
+                    <option value={editingRequisition.id}>
+                      {editingRequisition.requestNumber} -{" "}
+                      {editingRequisition.title}
+                    </option>
+                  )}
+
                   {requisitions.map((requisition) => (
                     <option key={requisition.id} value={requisition.id}>
                       {requisition.requestNumber} - {requisition.title}
                     </option>
                   ))}
-
-                  {editingId && (
-                    <option value={form.requisitionId}>
-                      {selectedOrder?.requisition.requestNumber ||
-                        "Requisition terpilih"}
-                    </option>
-                  )}
                 </select>
               </label>
 
@@ -636,7 +699,7 @@ export default function PurchaseOrders() {
                 <div className="po-section-heading">
                   <div>
                     <h2>Purchase Order Items</h2>
-                    <p>Harga satuan dapat disesuaikan.</p>
+                    <p>Pilih Inventory Item dan sesuaikan harga satuan.</p>
                   </div>
                 </div>
 
@@ -645,6 +708,7 @@ export default function PurchaseOrders() {
                     <thead>
                       <tr>
                         <th>ITEM</th>
+                        <th>INVENTORY ITEM</th>
                         <th>QUANTITY</th>
                         <th>UNIT</th>
                         <th>UNIT PRICE</th>
@@ -656,8 +720,29 @@ export default function PurchaseOrders() {
                       {formItems.map((item, index) => (
                         <tr key={index}>
                           <td>{item.itemName}</td>
+
+                          <td>
+                            <select
+                              value={item.inventoryItemId}
+                              onChange={(event) =>
+                                updateInventoryItem(index, event.target.value)
+                              }
+                              required
+                            >
+                              <option value="">Pilih Inventory Item</option>
+
+                              {inventoryItems.map((inventory) => (
+                                <option key={inventory.id} value={inventory.id}>
+                                  {inventory.itemCode} - {inventory.itemName}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+
                           <td>{item.quantity}</td>
+
                           <td>{item.unit}</td>
+
                           <td>
                             <input
                               type="number"
@@ -670,6 +755,7 @@ export default function PurchaseOrders() {
                               required
                             />
                           </td>
+
                           <td className="po-amount">
                             {formatRupiah(
                               item.quantity * Number(item.unitPrice || 0),
@@ -697,6 +783,17 @@ export default function PurchaseOrders() {
               </div>
             )}
 
+            {form.requisitionId && formItems.length === 0 && (
+              <p className="po-empty">Requisition ini belum memiliki item.</p>
+            )}
+
+            {inventoryItems.length === 0 && (
+              <p className="po-empty">
+                Belum ada Inventory Item aktif. Tambahkan Inventory Item
+                terlebih dahulu.
+              </p>
+            )}
+
             <div className="po-form-actions">
               <button
                 type="button"
@@ -709,7 +806,11 @@ export default function PurchaseOrders() {
               <button
                 type="submit"
                 className="po-primary-button"
-                disabled={saving || formItems.length === 0}
+                disabled={
+                  saving ||
+                  formItems.length === 0 ||
+                  inventoryItems.length === 0
+                }
               >
                 {saving
                   ? "Saving..."
@@ -820,12 +921,14 @@ export default function PurchaseOrders() {
                             className="po-action-select"
                             value=""
                             aria-label={`Update status ${order.poNumber}`}
-                            onChange={(event) =>
-                              updateStatus(
-                                order,
-                                event.target.value as POStatus,
-                              )
-                            }
+                            onChange={(event) => {
+                              if (event.target.value) {
+                                updateStatus(
+                                  order,
+                                  event.target.value as POStatus,
+                                );
+                              }
+                            }}
                           >
                             <option value="" disabled>
                               Update Status
@@ -880,12 +983,14 @@ export default function PurchaseOrders() {
             <div className="po-detail-grid">
               <div>
                 <small>Vendor</small>
-                <strong>{selectedOrder.vendor.companyName}</strong>
+                <strong>{selectedOrder.vendor?.companyName || "-"}</strong>
               </div>
 
               <div>
                 <small>Requisition</small>
-                <strong>{selectedOrder.requisition.requestNumber}</strong>
+                <strong>
+                  {selectedOrder.requisition?.requestNumber || "-"}
+                </strong>
               </div>
 
               <div>
@@ -900,7 +1005,7 @@ export default function PurchaseOrders() {
 
               <div>
                 <small>Department</small>
-                <strong>{selectedOrder.requisition.department}</strong>
+                <strong>{selectedOrder.requisition?.department || "-"}</strong>
               </div>
 
               <div>
@@ -916,6 +1021,7 @@ export default function PurchaseOrders() {
                 <thead>
                   <tr>
                     <th>ITEM</th>
+                    <th>INVENTORY ITEM</th>
                     <th>QTY</th>
                     <th>UNIT PRICE</th>
                     <th>TOTAL</th>
@@ -923,13 +1029,22 @@ export default function PurchaseOrders() {
                 </thead>
 
                 <tbody>
-                  {selectedOrder.items.map((item) => (
-                    <tr key={item.id}>
+                  {selectedOrder.items.map((item, index) => (
+                    <tr key={item.id ?? index}>
                       <td>{item.itemName}</td>
+
+                      <td>
+                        {item.inventoryItem
+                          ? `${item.inventoryItem.itemCode} - ${item.inventoryItem.itemName}`
+                          : "-"}
+                      </td>
+
                       <td>
                         {item.quantity} {item.unit}
                       </td>
+
                       <td>{formatRupiah(item.unitPrice)}</td>
+
                       <td>{formatRupiah(item.totalPrice)}</td>
                     </tr>
                   ))}
