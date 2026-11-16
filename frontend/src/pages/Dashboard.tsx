@@ -7,6 +7,7 @@ import ApprovalManagement from "./ApprovalManagement";
 import PurchaseOrders from "./PurchaseOrders";
 import GoodsReceipt from "./GoodsReceipt";
 import InventoryItems from "./InventoryItems";
+import WarehouseManagement from "./Warehouse";
 
 const stats = [
   {
@@ -164,6 +165,8 @@ export default function Dashboard({
       setActiveMenu("Goods Receipt");
     } else if (activePage === "inventory-items") {
       setActiveMenu("Inventory Items");
+    } else if (activePage === "warehouses") {
+      setActiveMenu("Warehouses");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -194,6 +197,11 @@ export default function Dashboard({
 
     if (label === "Purchase Orders") {
       onNavigate("purchase-orders");
+      return;
+    }
+
+    if (label === "Warehouses") {
+      onNavigate("warehouses");
       return;
     }
 
@@ -339,6 +347,8 @@ export default function Dashboard({
             <GoodsReceipt />
           ) : activePage === "inventory-items" ? (
             <InventoryItems />
+          ) : activePage === "warehouses" ? (
+            <WarehouseManagement />
           ) : (
             <>
               <section className="dashboard-welcome">

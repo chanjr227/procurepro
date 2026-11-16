@@ -1,0 +1,489 @@
+.warehouse-page {
+  width: 100%;
+  color: #172b3a;
+}
+
+.warehouse-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.warehouse-eyebrow {
+  color: #087f8c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  margin: 0 0 8px;
+}
+
+.warehouse-page-heading h1 {
+  font-size: 27px;
+  margin: 0;
+  font-weight: 750;
+  color: #102a36;
+}
+
+.warehouse-subtitle {
+  color: #8795a4;
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
+.warehouse-primary-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #087f8c;
+  color: white;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.warehouse-primary-button:hover {
+  background: #066873;
+  transform: translateY(-1px);
+}
+
+.warehouse-primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.warehouse-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+  margin-bottom: 24px;
+}
+
+.warehouse-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 21px;
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(16, 42, 54, 0.025);
+}
+
+.warehouse-summary-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #e8f6f7;
+  color: #087f8c;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.warehouse-summary-card div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warehouse-summary-card span {
+  color: #7d8b99;
+  font-size: 12px;
+}
+
+.warehouse-summary-card strong {
+  color: #102a36;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.warehouse-summary-card small {
+  color: #a0aab5;
+  font-size: 11px;
+}
+
+.warehouse-panel {
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.warehouse-panel-heading {
+  padding: 22px 23px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.warehouse-panel-heading h2 {
+  font-size: 16px;
+  color: #102a36;
+  margin: 0;
+}
+
+.warehouse-panel-heading p {
+  color: #8795a4;
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+.warehouse-search {
+  width: 290px;
+  max-width: 100%;
+  height: 39px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e2e8ee;
+  border-radius: 8px;
+  color: #8795a4;
+}
+
+.warehouse-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #253b4b;
+  font-size: 12px;
+}
+
+.warehouse-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.warehouse-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.warehouse-table th {
+  padding: 14px 17px;
+  background: #f8fafc;
+  color: #8492a0;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.55px;
+  white-space: nowrap;
+}
+
+.warehouse-table td {
+  padding: 16px 17px;
+  border-bottom: 1px solid #edf1f4;
+  color: #425466;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.warehouse-table tbody tr:hover {
+  background: #fbfdfe;
+}
+
+.warehouse-identity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 170px;
+}
+
+.warehouse-row-icon {
+  width: 37px;
+  height: 37px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #e8f6f7;
+  color: #087f8c;
+  font-size: 17px;
+}
+
+.warehouse-identity div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.warehouse-identity strong {
+  color: #253b4b;
+  font-size: 12px;
+}
+
+.warehouse-identity small {
+  color: #8c9aa7;
+  font-size: 11px;
+}
+
+.warehouse-address {
+  display: block;
+  max-width: 190px;
+  color: #6e7e8d;
+  line-height: 1.5;
+}
+
+.warehouse-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.warehouse-status.active {
+  background: #e8f8ef;
+  color: #16834b;
+}
+
+.warehouse-status.inactive {
+  background: #fff0ef;
+  color: #cf514b;
+}
+
+.warehouse-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.warehouse-edit-button,
+.warehouse-toggle-button {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.warehouse-edit-button {
+  color: #087f8c;
+  background: #e9f6f7;
+  border: 1px solid #d5edef;
+}
+
+.warehouse-toggle-button.deactivate {
+  color: #c34b47;
+  background: #fff3f2;
+  border: 1px solid #f6dedc;
+}
+
+.warehouse-toggle-button.activate {
+  color: #16834b;
+  background: #eaf8f0;
+  border: 1px solid #d5efdf;
+}
+
+.warehouse-edit-button:hover,
+.warehouse-toggle-button:hover {
+  filter: brightness(0.96);
+}
+
+.warehouse-empty {
+  text-align: center;
+  padding: 40px !important;
+  color: #8795a4 !important;
+}
+
+.warehouse-table-footer {
+  padding: 15px 22px;
+  color: #8795a4;
+  font-size: 11px;
+}
+
+.warehouse-alert {
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+.warehouse-alert.success-alert {
+  background: #eaf8f0;
+  color: #16834b;
+  border: 1px solid #d5efdf;
+}
+
+.warehouse-alert.error-alert {
+  background: #fff1f0;
+  color: #c34b47;
+  border: 1px solid #f4d8d6;
+}
+
+.warehouse-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 25, 38, 0.55);
+  overflow-y: auto;
+}
+
+.warehouse-modal {
+  width: 100%;
+  max-width: 590px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 25px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.warehouse-modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 23px;
+}
+
+.warehouse-modal-heading h2 {
+  color: #102a36;
+  font-size: 19px;
+  margin: 0;
+}
+
+.warehouse-modal-heading p {
+  color: #8795a4;
+  font-size: 12px;
+  margin: 7px 0 0;
+}
+
+.warehouse-close-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 7px;
+  background: #f1f4f6;
+  color: #667788;
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.warehouse-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.warehouse-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #34495a;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.warehouse-form-grid label > span {
+  display: inline;
+  color: #dc5550;
+}
+
+.warehouse-form-grid input,
+.warehouse-form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid #dfe6ec;
+  border-radius: 7px;
+  outline: none;
+  color: #253b4b;
+  background: #fff;
+  font: inherit;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.warehouse-form-grid input:focus,
+.warehouse-form-grid textarea:focus {
+  border-color: #087f8c;
+  box-shadow: 0 0 0 3px rgba(8, 127, 140, 0.09);
+}
+
+.warehouse-form-grid textarea {
+  resize: vertical;
+}
+
+.warehouse-full-width {
+  grid-column: 1 / -1;
+}
+
+.warehouse-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.warehouse-cancel-button {
+  padding: 10px 17px;
+  border: 1px solid #dfe6ec;
+  border-radius: 8px;
+  color: #526475;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .warehouse-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .warehouse-page-heading,
+  .warehouse-panel-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .warehouse-page-heading {
+    gap: 15px;
+  }
+
+  .warehouse-page-heading h1 {
+    font-size: 22px;
+  }
+
+  .warehouse-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .warehouse-search {
+    width: auto;
+  }
+
+  .warehouse-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .warehouse-full-width {
+    grid-column: auto;
+  }
+
+  .warehouse-modal {
+    padding: 19px;
+  }
+}
