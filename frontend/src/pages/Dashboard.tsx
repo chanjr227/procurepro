@@ -9,6 +9,7 @@ import GoodsReceipt from "./GoodsReceipt";
 import InventoryItems from "./InventoryItems";
 import WarehouseManagement from "./Warehouse";
 import InventoryStock from "./InventoryStock";
+import StockTransactions from "./StockTransactions";
 
 const stats = [
   {
@@ -169,6 +170,9 @@ export default function Dashboard({
     } else if (activePage === "warehouses") {
       setActiveMenu("Warehouses");
     } else if (activePage === "inventory-stock") {
+      setActiveMenu("Inventory Stock");
+    } else if (activePage === "stock-transactions") {
+      setActiveMenu("Stock Transactions");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -204,6 +208,11 @@ export default function Dashboard({
 
     if (label === "Warehouses") {
       onNavigate("warehouses");
+      return;
+    }
+
+    if (label === "Stock Transactions") {
+      onNavigate("stock-transactions");
       return;
     }
 
@@ -356,6 +365,8 @@ export default function Dashboard({
             <InventoryItems />
           ) : activePage === "inventory-stock" ? (
             <InventoryStock />
+          ) : activePage === "stock-transactions" ? (
+            <StockTransactions />
           ) : activePage === "warehouses" ? (
             <WarehouseManagement />
           ) : (
