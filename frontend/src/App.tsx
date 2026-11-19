@@ -15,7 +15,9 @@ interface LoginData {
   user: User;
 }
 
+// Mengatur autentikasi pengguna dan halaman utama aplikasi.
 function App() {
+  // Memulihkan sesi pengguna yang tersimpan di browser.
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem("user");
     return savedUser ? JSON.parse(savedUser) : null;
@@ -23,12 +25,14 @@ function App() {
 
   const [activePage, setActivePage] = useState("dashboard");
 
+  // Menyimpan token dan profil setelah login berhasil.
   const handleLoginSuccess = (data: LoginData) => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
     setUser(data.user);
   };
 
+  // Menghapus sesi pengguna dan kembali ke halaman dashboard.
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

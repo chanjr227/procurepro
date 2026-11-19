@@ -30,12 +30,14 @@ const receiptInclude = {
 // =====================================================
 // HELPER
 // =====================================================
+// Membuat objek error dengan kode status HTTP untuk proses penerimaan barang.
 const createError = (message, statusCode = 400) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Mengambil nama pengguna dari informasi autentikasi.
 const getUserName = (user) => {
   return String(user?.name || user?.userId || "System");
 };
@@ -44,6 +46,7 @@ const getUserName = (user) => {
 // GET GOODS RECEIPTS
 // GET /api/goods-receipts
 // =====================================================
+// Mengambil daftar penerimaan barang.
 const getGoodsReceipts = async (req, res) => {
   try {
     const { status, search } = req.query;
@@ -106,6 +109,7 @@ const getGoodsReceipts = async (req, res) => {
 // GET GOODS RECEIPT OPTIONS
 // GET /api/goods-receipts/options
 // =====================================================
+// Mengambil purchase order yang tersedia untuk penerimaan barang.
 const getGoodsReceiptOptions = async (req, res) => {
   try {
     const [purchaseOrders, warehouses] = await Promise.all([
@@ -197,6 +201,7 @@ const getGoodsReceiptOptions = async (req, res) => {
 // GET GOODS RECEIPT DETAIL
 // GET /api/goods-receipts/:id
 // =====================================================
+// Mengambil rincian penerimaan barang berdasarkan ID.
 const getGoodsReceiptDetail = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -232,6 +237,7 @@ const getGoodsReceiptDetail = async (req, res) => {
 // CREATE GOODS RECEIPT
 // POST /api/goods-receipts
 // =====================================================
+// Mencatat penerimaan barang dan memperbarui stok terkait.
 const createGoodsReceipt = async (req, res) => {
   try {
     const { purchaseOrderId, warehouseId, receivedDate, notes, items } =

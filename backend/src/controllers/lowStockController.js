@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 
 // GET /api/low-stock-alerts
+// Mengambil peringatan untuk barang yang stoknya menipis atau habis.
 const getLowStockAlerts = async (req, res) => {
   try {
     const { warehouseId, severity = "ALL" } = req.query;

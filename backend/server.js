@@ -16,6 +16,7 @@ const stockTransactionRoutes = require("./src/routes/stockTransactionRoutes");
 const stockOpnameRoutes = require("./src/routes/stockOpnameRoutes");
 const lowStockRoutes = require("./src/routes/lowStockRoutes");
 
+// Menyiapkan aplikasi Express dan port layanan backend.
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -36,7 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 // console.log("stockTransactionRoutes:", typeof stockTransactionRoutes);
 // console.log("==================");
 
-// Routes API
+// Mendaftarkan router fitur API pada prefix masing-masing.
 app.use("/api/auth", authRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/requisitions", requisitionRoutes);
@@ -49,7 +50,7 @@ app.use("/api/stock-transactions", stockTransactionRoutes);
 app.use("/api/stock-opnames", stockOpnameRoutes);
 app.use("/api/low-stock-alerts", lowStockRoutes);
 
-// Homepage
+// Menyediakan endpoint informasi dasar untuk memeriksa server.
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -57,7 +58,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Database health check
+// Memeriksa konektivitas database melalui query sederhana.
 app.get("/api/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -77,6 +78,7 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+// Menjalankan server agar API dapat menerima request.
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
 });

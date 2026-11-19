@@ -3,6 +3,7 @@ const prisma = require("../lib/prisma");
 // ==========================================
 // HELPER: Memeriksa hak akses approver
 // ==========================================
+// Memastikan pengguna memiliki hak untuk memproses persetujuan.
 const checkApprover = (req, res) => {
   const allowedRoles = ["SUPER_ADMIN", "PROCUREMENT_MANAGER"];
 
@@ -21,6 +22,7 @@ const checkApprover = (req, res) => {
 // ==========================================
 // HELPER: Mengambil ID user yang login
 // ==========================================
+// Mengambil ID pengguna dari informasi autentikasi pada request.
 const getUserId = (req) => {
   const userId = Number(req.user?.userId);
 
@@ -51,6 +53,7 @@ const requisitionInclude = {
 // ==========================================
 // GET: PENDING APPROVALS
 // ==========================================
+// Menampilkan requisition yang menunggu persetujuan pengguna.
 const getPendingApprovals = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;
@@ -83,6 +86,7 @@ const getPendingApprovals = async (req, res) => {
 // ==========================================
 // GET: DETAIL APPROVAL
 // ==========================================
+// Mengambil rincian requisition yang akan ditinjau.
 const getApprovalDetail = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;
@@ -141,6 +145,7 @@ const getApprovalDetail = async (req, res) => {
 // ==========================================
 // POST: APPROVE REQUISITION
 // ==========================================
+// Menyetujui requisition dan memperbarui statusnya.
 const approveRequisition = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;
@@ -265,6 +270,7 @@ const approveRequisition = async (req, res) => {
 // ==========================================
 // POST: REJECT REQUISITION
 // ==========================================
+// Menolak requisition dan mencatat alasan penolakannya.
 const rejectRequisition = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;
@@ -372,6 +378,7 @@ const rejectRequisition = async (req, res) => {
 // ==========================================
 // GET: APPROVAL HISTORY
 // ==========================================
+// Menampilkan riwayat persetujuan yang telah diproses.
 const getApprovalHistory = async (req, res) => {
   try {
     if (!checkApprover(req, res)) return;

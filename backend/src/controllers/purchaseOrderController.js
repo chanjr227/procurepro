@@ -35,6 +35,7 @@ const purchaseOrderInclude = {
 // =====================================================
 // HELPER
 // =====================================================
+// Mengirim respons kesalahan dengan pesan cadangan untuk API purchase order.
 const sendError = (res, error, fallback) => {
   console.error(fallback, error);
 
@@ -44,12 +45,14 @@ const sendError = (res, error, fallback) => {
   });
 };
 
+// Membuat objek error dengan kode status HTTP yang sesuai.
 const createError = (message, statusCode = 400) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Mengubah nilai input menjadi angka uang yang dapat diproses.
 const toMoney = (value) => {
   const number = Number(value);
 
@@ -60,12 +63,14 @@ const toMoney = (value) => {
   return Math.round(number * 100) / 100;
 };
 
+// Membuat nomor purchase order baru.
 const generatePONumber = () => {
   const year = new Date().getFullYear();
   return `PO-${year}-${Date.now()}`;
 };
 
 // Validasi Inventory Item
+// Memvalidasi barang inventaris yang digunakan dalam purchase order.
 const validateInventoryItem = async (tx, inventoryItemId, itemName) => {
   const id = Number(inventoryItemId);
 
@@ -90,6 +95,7 @@ const validateInventoryItem = async (tx, inventoryItemId, itemName) => {
 // GET PURCHASE ORDERS
 // GET /api/purchase-orders
 // =====================================================
+// Mengambil daftar purchase order.
 const getPurchaseOrders = async (req, res) => {
   try {
     const { search = "", status = "" } = req.query;
@@ -170,6 +176,7 @@ const getPurchaseOrders = async (req, res) => {
 // GET PURCHASE ORDER OPTIONS
 // GET /api/purchase-orders/options
 // =====================================================
+// Mengambil data pilihan yang diperlukan saat membuat purchase order.
 const getPurchaseOrderOptions = async (req, res) => {
   try {
     const [vendors, requisitions, inventoryItems] = await Promise.all([
@@ -246,6 +253,7 @@ const getPurchaseOrderOptions = async (req, res) => {
 // GET PURCHASE ORDER DETAIL
 // GET /api/purchase-orders/:id
 // =====================================================
+// Mengambil rincian purchase order berdasarkan ID.
 const getPurchaseOrderDetail = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -282,6 +290,7 @@ const getPurchaseOrderDetail = async (req, res) => {
 // CREATE PURCHASE ORDER
 // POST /api/purchase-orders
 // =====================================================
+// Membuat purchase order baru beserta detail barangnya.
 const createPurchaseOrder = async (req, res) => {
   try {
     const requisitionId = Number(req.body.requisitionId);
@@ -435,6 +444,7 @@ const createPurchaseOrder = async (req, res) => {
 // UPDATE PURCHASE ORDER
 // PUT /api/purchase-orders/:id
 // =====================================================
+// Memperbarui informasi dan detail purchase order.
 const updatePurchaseOrder = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -598,6 +608,7 @@ const updatePurchaseOrder = async (req, res) => {
 // UPDATE PURCHASE ORDER STATUS
 // PATCH /api/purchase-orders/:id/status
 // =====================================================
+// Memperbarui status purchase order.
 const updatePurchaseOrderStatus = async (req, res) => {
   try {
     const id = Number(req.params.id);

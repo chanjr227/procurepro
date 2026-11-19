@@ -14,6 +14,7 @@ const opnameInclude = {
 };
 
 // GET /api/stock-opnames
+// Mengambil daftar sesi stock opname.
 const getStockOpnames = async (req, res) => {
   try {
     const opnames = await prisma.stockOpname.findMany({
@@ -44,6 +45,7 @@ const getStockOpnames = async (req, res) => {
 };
 
 // GET /api/stock-opnames/:id
+// Mengambil rincian stock opname beserta itemnya.
 const getStockOpnameById = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -81,6 +83,7 @@ const getStockOpnameById = async (req, res) => {
 };
 
 // POST /api/stock-opnames
+// Membuat sesi stock opname untuk gudang tertentu.
 const createStockOpname = async (req, res) => {
   try {
     const warehouseId = Number(req.body.warehouseId);
@@ -183,6 +186,7 @@ const createStockOpname = async (req, res) => {
 };
 
 // PUT /api/stock-opnames/:id/items/:itemId
+// Memperbarui hasil hitung fisik untuk item stock opname.
 const updateStockOpnameItem = async (req, res) => {
   try {
     const opnameId = Number(req.params.id);
@@ -271,6 +275,7 @@ const updateStockOpnameItem = async (req, res) => {
 };
 
 // POST /api/stock-opnames/:id/complete
+// Menyelesaikan stock opname dan menerapkan penyesuaian stok.
 const completeStockOpname = async (req, res) => {
   try {
     const id = Number(req.params.id);

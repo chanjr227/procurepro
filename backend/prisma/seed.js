@@ -1,5 +1,6 @@
 const prisma = require("../src/lib/prisma");
 
+// Membuat atau memperbarui role standar aplikasi.
 async function main() {
   const roles = [
     {

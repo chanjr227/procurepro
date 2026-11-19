@@ -32,12 +32,14 @@ const emptyItem: RequisitionItem = {
   estimatedUnitPrice: 0,
 };
 
+// Memformat nilai requisition dalam mata uang rupiah.
 const formatRupiah = (value: number) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(value);
+// Menampilkan dan mengelola requisition beserta itemnya.
 export default function Requisitions({
   onNavigate,
 }: {
@@ -62,6 +64,7 @@ export default function Requisitions({
     items: [{ ...emptyItem }],
   });
 
+  // Memuat daftar requisition dari backend.
   const fetchRequisitions = async () => {
     try {
       setLoading(true);
@@ -81,6 +84,7 @@ export default function Requisitions({
     fetchRequisitions();
   }, []);
 
+  // Mengosongkan formulir requisition.
   const resetForm = () => {
     setForm({
       title: "",
@@ -93,6 +97,7 @@ export default function Requisitions({
     setShowForm(false);
   };
 
+  // Memperbarui field pada baris item requisition.
   const updateItem = (
     index: number,
     field: keyof RequisitionItem,
@@ -106,6 +111,7 @@ export default function Requisitions({
     }));
   };
 
+  // Menambahkan baris item ke formulir requisition.
   const addItem = () => {
     setForm((previous) => ({
       ...previous,
@@ -113,6 +119,7 @@ export default function Requisitions({
     }));
   };
 
+  // Menghapus baris item dari formulir requisition.
   const removeItem = (index: number) => {
     setForm((previous) => ({
       ...previous,
@@ -120,6 +127,7 @@ export default function Requisitions({
     }));
   };
 
+  // Mengisi formulir dengan data requisition yang akan diedit.
   const openEditForm = (item: Requisition) => {
     setEditingId(item.id);
     setForm({
@@ -138,6 +146,7 @@ export default function Requisitions({
     setShowForm(true);
   };
 
+  // Membuat requisition baru atau menyimpan perubahan.
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -187,6 +196,7 @@ export default function Requisitions({
     }
   };
 
+  // Mengirim requisition yang disimpan ke proses persetujuan.
   const handleSubmitRequest = async (id: number) => {
     if (!window.confirm("Ajukan permintaan pengadaan ini?")) return;
 
@@ -198,6 +208,7 @@ export default function Requisitions({
     }
   };
 
+  // Menghapus requisition yang dipilih.
   const handleDelete = async (id: number) => {
     if (!window.confirm("Yakin ingin menghapus permintaan ini?")) return;
 
@@ -223,6 +234,7 @@ export default function Requisitions({
     return matchesSearch && matchesStatus;
   });
 
+  // Menghitung total nilai seluruh item requisition.
   const getTotal = (items: RequisitionItem[]) =>
     items.reduce(
       (total, item) => total + item.quantity * Number(item.estimatedUnitPrice),

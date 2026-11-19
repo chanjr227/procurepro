@@ -38,6 +38,7 @@ interface StockOpname {
   };
 }
 
+// Menampilkan dan mengelola sesi stock opname.
 export default function StockOpname() {
   const [opnames, setOpnames] = useState<StockOpname[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -61,6 +62,7 @@ export default function StockOpname() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Memuat daftar sesi stock opname.
   const loadOpnames = async () => {
     try {
       const response = await api.get("/stock-opnames");
@@ -72,6 +74,7 @@ export default function StockOpname() {
     }
   };
 
+  // Memuat daftar gudang untuk sesi stock opname.
   const loadWarehouses = async () => {
     try {
       const response = await api.get("/warehouses");
@@ -86,6 +89,7 @@ export default function StockOpname() {
     }
   };
 
+  // Memuat data utama stock opname dan pilihan gudang.
   const loadData = async () => {
     setLoading(true);
     setError("");
@@ -99,6 +103,7 @@ export default function StockOpname() {
     loadData();
   }, []);
 
+  // Memuat rincian sesi stock opname yang dipilih.
   const openDetail = async (id: number) => {
     try {
       setError("");
@@ -122,6 +127,7 @@ export default function StockOpname() {
     }
   };
 
+  // Membuat sesi stock opname baru.
   const createOpname = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -159,6 +165,7 @@ export default function StockOpname() {
     }
   };
 
+  // Menyimpan jumlah stok hasil penghitungan fisik.
   const updatePhysicalStock = async (item: OpnameItem) => {
     const value = physicalValues[item.id];
 
@@ -197,6 +204,7 @@ export default function StockOpname() {
     }
   };
 
+  // Menyelesaikan sesi stock opname dan menerapkan hasil hitung.
   const completeOpname = async () => {
     if (!selectedOpname) return;
 
@@ -230,6 +238,7 @@ export default function StockOpname() {
     }
   };
 
+  // Memformat tanggal sesi stock opname untuk tampilan.
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("id-ID", {
       day: "2-digit",

@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 
 // GET /api/warehouses
+// Mengambil daftar gudang.
 const getWarehouses = async (req, res) => {
   try {
     const warehouses = await prisma.warehouse.findMany({
@@ -32,6 +33,7 @@ const getWarehouses = async (req, res) => {
 };
 
 // POST /api/warehouses
+// Membuat data gudang baru.
 const createWarehouse = async (req, res) => {
   try {
     const { warehouseCode, warehouseName, address, description } = req.body;
@@ -78,6 +80,7 @@ const createWarehouse = async (req, res) => {
 };
 
 // GET /api/warehouses/:id
+// Mengambil rincian gudang berdasarkan ID.
 const getWarehouseDetail = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -127,6 +130,7 @@ const getWarehouseDetail = async (req, res) => {
 };
 
 // PUT /api/warehouses/:id
+// Memperbarui informasi gudang.
 const updateWarehouse = async (req, res) => {
   try {
     const id = Number(req.params.id);

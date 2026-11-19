@@ -51,6 +51,7 @@ const initialForm: TransactionForm = {
   notes: "",
 };
 
+// Menampilkan dan mencatat transaksi pergerakan stok.
 const StockTransactions = () => {
   const [transactions, setTransactions] = useState<StockTransaction[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -67,6 +68,7 @@ const StockTransactions = () => {
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [warehouseFilter, setWarehouseFilter] = useState("ALL");
 
+  // Memuat transaksi dan data pendukung formulir.
   const loadData = async () => {
     try {
       setLoading(true);
@@ -129,9 +131,11 @@ const StockTransactions = () => {
     (item) => item.transactionType === "ADJUSTMENT",
   ).length;
 
+  // Memformat jumlah transaksi agar mudah dibaca.
   const formatNumber = (value: number) =>
     new Intl.NumberFormat("id-ID").format(value || 0);
 
+  // Memformat tanggal transaksi untuk tampilan.
   const formatDate = (value: string) => {
     return new Date(value).toLocaleString("id-ID", {
       day: "2-digit",
@@ -142,6 +146,7 @@ const StockTransactions = () => {
     });
   };
 
+  // Memperbarui nilai field pada formulir transaksi.
   const handleFormChange = (field: keyof TransactionForm, value: string) => {
     setForm((previous) => ({
       ...previous,
@@ -149,12 +154,14 @@ const StockTransactions = () => {
     }));
   };
 
+  // Mengosongkan formulir transaksi.
   const resetForm = () => {
     setForm(initialForm);
     setError("");
     setSuccess("");
   };
 
+  // Mengirim transaksi stok baru untuk disimpan.
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -211,6 +218,7 @@ const StockTransactions = () => {
     }
   };
 
+  // Mengubah kode tipe transaksi menjadi label tampilan.
   const getTypeLabel = (type: string) => {
     if (type === "IN") return "Stock In";
     if (type === "OUT") return "Stock Out";

@@ -1,5 +1,7 @@
+// Menyiapkan tombol penghitung sederhana untuk halaman demo.
 export function setupCounter(element: HTMLButtonElement) {
   let counter = 0
+  // Memperbarui teks tombol dan nilai penghitung.
   const setCounter = (count: number) => {
     counter = count
     element.innerHTML = `Count is ${counter}`

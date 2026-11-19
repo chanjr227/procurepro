@@ -2,6 +2,7 @@ const prisma = require("../lib/prisma");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// Memeriksa kredensial pengguna dan membuat sesi login.
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;

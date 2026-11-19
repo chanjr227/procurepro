@@ -20,7 +20,9 @@ api.interceptors.request.use((config) => {
 
 // Jika token kedaluwarsa, kembalikan pengguna ke halaman login
 api.interceptors.response.use(
+  // Meneruskan respons API yang berhasil.
   (response) => response,
+  // Membersihkan sesi jika API menolak token, lalu meneruskan error.
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");

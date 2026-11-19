@@ -1,6 +1,7 @@
 const prisma = require("../src/lib/prisma");
 const bcrypt = require("bcryptjs");
 
+// Membuat atau memperbarui akun administrator awal.
 async function main() {
   const email = "admin@procurepro.com";
   const password = "Admin12345!";

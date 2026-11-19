@@ -85,6 +85,7 @@ const emptyForm: VendorForm = {
   status: "PENDING",
 };
 
+// Menampilkan dan mengelola vendor serta navigasi modul terkait.
 export default function VendorManagement({
   user,
   onLogout,
@@ -108,6 +109,7 @@ export default function VendorManagement({
   const [formError, setFormError] = useState("");
 
   // Navigasi sidebar
+  // Membuka halaman sesuai menu yang dipilih.
   const handleMenuClick = (label: string, page: string) => {
     setActiveMenu(label);
     onNavigate(page);
@@ -154,6 +156,7 @@ export default function VendorManagement({
   }, [fetchVendors]);
 
   // Tambah vendor
+  // Membuka formulir untuk menambahkan vendor.
   const openAddModal = () => {
     setEditingId(null);
     setForm(emptyForm);
@@ -162,6 +165,7 @@ export default function VendorManagement({
   };
 
   // Edit vendor
+  // Membuka formulir dengan data vendor yang dipilih.
   const openEditModal = (vendor: Vendor) => {
     setEditingId(vendor.id);
 
@@ -183,6 +187,7 @@ export default function VendorManagement({
   };
 
   // Tutup modal
+  // Menutup formulir vendor dan mereset state modal.
   const closeModal = () => {
     if (saving) return;
 
@@ -205,6 +210,7 @@ export default function VendorManagement({
   };
 
   // Simpan vendor
+  // Menyimpan data vendor baru atau perubahan vendor.
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError("");
@@ -256,6 +262,7 @@ export default function VendorManagement({
   };
 
   // Hapus vendor
+  // Menghapus vendor setelah tindakan dikonfirmasi.
   const handleDelete = async (vendor: Vendor) => {
     const confirmed = window.confirm(
       `Apakah Anda yakin ingin menghapus vendor "${vendor.companyName}"?`,
@@ -276,6 +283,7 @@ export default function VendorManagement({
   };
 
   // Format tanggal
+  // Memformat tanggal untuk ditampilkan pada daftar vendor.
   const formatDate = (date: string) => {
     if (!date) return "—";
 
@@ -286,6 +294,7 @@ export default function VendorManagement({
     });
   };
 
+  // Mengubah status vendor menjadi label yang ditampilkan.
   const statusLabel = (status: VendorStatus) => {
     const labels: Record<VendorStatus, string> = {
       PENDING: "Pending",

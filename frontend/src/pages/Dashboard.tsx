@@ -173,6 +173,7 @@ interface LowStockSummary {
   lowStock: number;
 }
 
+// Menampilkan dashboard dan mengatur navigasi serta notifikasi pengguna.
 export default function Dashboard({
   user,
   onLogout,
@@ -193,7 +194,9 @@ export default function Dashboard({
 
   const [showNotifications, setShowNotifications] = useState(false);
 
+  // Mengambil notifikasi stok saat halaman dibuka dan menjadwalkan pembaruan.
   useEffect(() => {
+    // Mengambil daftar peringatan stok dan ringkasannya dari backend.
     const fetchLowStockAlerts = async () => {
       try {
         const response = await api.get("/low-stock-alerts");
@@ -216,12 +219,15 @@ export default function Dashboard({
     fetchLowStockAlerts();
 
     const interval = setInterval(() => {
+      // Memperbarui notifikasi stok secara berkala.
       fetchLowStockAlerts();
     }, 30000);
 
+    // Membersihkan interval saat komponen dashboard dilepas.
     return () => clearInterval(interval);
   }, []);
 
+  // Menyamakan menu aktif dengan halaman yang sedang dibuka.
   useEffect(() => {
     if (activePage === "vendors") {
       setActiveMenu("Vendors");
@@ -248,6 +254,7 @@ export default function Dashboard({
     }
   }, [activePage]);
 
+  // Membuka halaman sesuai menu yang dipilih pengguna.
   const handleMenuClick = (label: string) => {
     setActiveMenu(label);
 
@@ -328,17 +335,24 @@ export default function Dashboard({
         </div>
 
         <nav className="sidebar-navigation">
-          {menuGroups.map((group) => (
+          {menuGroups.map(
+            // Menampilkan setiap kelompok menu pada sidebar.
+            (group) => (
             <div className="menu-group" key={group.title}>
               <p className="menu-heading">{group.title}</p>
 
-              {group.items.map((item) => (
+              {group.items.map(
+                // Menampilkan item menu beserta status aktifnya.
+                (item) => (
                 <button
                   key={item.label}
                   className={`sidebar-link ${
                     activeMenu === item.label ? "active" : ""
                   }`}
-                  onClick={() => handleMenuClick(item.label)}
+                  onClick={
+                    // Menangani pemilihan item menu.
+                    () => handleMenuClick(item.label)
+                  }
                 >
                   <span className="sidebar-icon">{item.icon}</span>
                   <span>{item.label}</span>
@@ -357,7 +371,10 @@ export default function Dashboard({
             className={`sidebar-link ${
               activeMenu === "Settings" ? "active" : ""
             }`}
-            onClick={() => setActiveMenu("Settings")}
+            onClick={
+              // Mengaktifkan menu pengaturan.
+              () => setActiveMenu("Settings")
+            }
           >
             <span className="sidebar-icon">⚙</span>
             Settings
@@ -395,7 +412,10 @@ export default function Dashboard({
                 type="search"
                 placeholder="Search anything..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={
+                  // Memperbarui kata kunci pencarian pesanan.
+                  (e) => setSearch(e.target.value)
+                }
               />
               <kbd>⌘ K</kbd>
             </label>
@@ -405,7 +425,10 @@ export default function Dashboard({
                 className="notification-button"
                 title="Notifications"
                 type="button"
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={
+                  // Membuka atau menutup panel notifikasi.
+                  () => setShowNotifications(!showNotifications)
+                }
                 aria-expanded={showNotifications}
               >
                 <span className="notification-bell">♧</span>
@@ -433,7 +456,10 @@ export default function Dashboard({
                     <button
                       type="button"
                       className="notification-close"
-                      onClick={() => setShowNotifications(false)}
+                      onClick={
+                        // Menutup panel notifikasi.
+                        () => setShowNotifications(false)
+                      }
                     >
                       ×
                     </button>
@@ -459,15 +485,20 @@ export default function Dashboard({
                         <p>Semua stok masih dalam kondisi aman.</p>
                       </div>
                     ) : (
-                      alerts.map((alert) => (
+                      alerts.map(
+                        // Menampilkan detail untuk setiap peringatan stok.
+                        (alert) => (
                         <button
                           type="button"
                           className="notification-item"
                           key={alert.id}
-                          onClick={() => {
+                          onClick={
+                            // Membuka halaman stok setelah notifikasi dipilih.
+                            () => {
                             setShowNotifications(false);
                             onNavigate("inventory-stock");
-                          }}
+                            }
+                          }
                         >
                           <div
                             className={`notification-status ${
@@ -524,10 +555,13 @@ export default function Dashboard({
                   <div className="notification-footer">
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={
+                        // Membuka halaman stok dari tautan pada panel notifikasi.
+                        () => {
                         setShowNotifications(false);
                         onNavigate("inventory-stock");
-                      }}
+                        }
+                      }
                     >
                       Lihat Inventory Stock →
                     </button>
@@ -587,14 +621,19 @@ export default function Dashboard({
 
                 <button
                   className="primary-action"
-                  onClick={() => onNavigate("requisitions")}
+                  onClick={
+                    // Membuka halaman pembuatan requisition.
+                    () => onNavigate("requisitions")
+                  }
                 >
                   <span>＋</span> Create Requisition
                 </button>
               </section>
 
               <section className="stats-grid">
-                {stats.map((stat) => (
+                {stats.map(
+                  // Menampilkan setiap kartu statistik dashboard.
+                  (stat) => (
                   <article className="stat-card" key={stat.label}>
                     <div className="stat-card-top">
                       <span>{stat.label}</span>
@@ -643,6 +682,7 @@ export default function Dashboard({
 
                     <div className="chart-bars">
                       {[38, 52, 44, 68, 56, 78, 62, 88, 70, 95, 76, 84].map(
+                        // Menggambar kolom grafik untuk setiap bulan.
                         (height, index) => (
                           <div className="chart-column" key={index}>
                             <div
@@ -722,7 +762,10 @@ export default function Dashboard({
 
                   <button
                     className="text-action"
-                    onClick={() => onNavigate("requisitions")}
+                    onClick={
+                      // Membuka daftar requisition.
+                      () => onNavigate("requisitions")
+                    }
                   >
                     View all requisitions →
                   </button>
@@ -739,7 +782,10 @@ export default function Dashboard({
 
                     <button
                       className="text-action"
-                      onClick={() => onNavigate("purchase-orders")}
+                      onClick={
+                        // Membuka daftar purchase order.
+                        () => onNavigate("purchase-orders")
+                      }
                     >
                       View all →
                     </button>
@@ -759,12 +805,16 @@ export default function Dashboard({
 
                       <tbody>
                         {orders
-                          .filter((order) =>
+                          .filter(
+                            // Memilih pesanan yang cocok dengan kata kunci pencarian.
+                            (order) =>
                             `${order.id} ${order.vendor} ${order.status}`
                               .toLowerCase()
                               .includes(search.toLowerCase()),
                           )
-                          .map((order) => (
+                          .map(
+                            // Menampilkan baris untuk setiap pesanan yang cocok.
+                            (order) => (
                             <tr key={order.id}>
                               <td className="order-id">{order.id}</td>
                               <td>{order.vendor}</td>
@@ -797,7 +847,9 @@ export default function Dashboard({
                   </div>
 
                   <div className="activity-list">
-                    {activities.map((activity, index) => (
+                    {activities.map(
+                      // Menampilkan setiap aktivitas terbaru.
+                      (activity, index) => (
                       <div className="activity-item" key={index}>
                         <div className="activity-icon">{activity.icon}</div>
                         <div className="activity-detail">

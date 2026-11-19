@@ -1,6 +1,7 @@
 const prisma = require("../src/lib/prisma");
 const bcrypt = require("bcryptjs");
 
+// Membuat akun Procurement Manager jika belum tersedia.
 async function seedManager() {
   try {
     // Cari role Procurement Manager

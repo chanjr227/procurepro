@@ -10,7 +10,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 router.use(authMiddleware);
 
+// Mengambil daftar transaksi pergerakan stok.
 router.get("/", getStockTransactions);
+// Mencatat transaksi pergerakan stok baru.
 router.post("/", createStockTransaction);
 
 module.exports = router;

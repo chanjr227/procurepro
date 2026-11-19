@@ -31,6 +31,7 @@ const initialForm: WarehouseForm = {
   description: "",
 };
 
+// Menampilkan dan mengelola daftar gudang.
 export default function WarehouseManagement() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ export default function WarehouseManagement() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Memuat data gudang dari backend.
   const loadWarehouses = async () => {
     try {
       setLoading(true);
@@ -89,6 +91,7 @@ export default function WarehouseManagement() {
     0,
   );
 
+  // Membuka formulir untuk menambahkan gudang.
   const openCreateModal = () => {
     setEditingId(null);
     setForm(initialForm);
@@ -96,6 +99,7 @@ export default function WarehouseManagement() {
     setShowModal(true);
   };
 
+  // Membuka formulir dengan data gudang yang dipilih.
   const openEditModal = (warehouse: Warehouse) => {
     setEditingId(warehouse.id);
     setForm({
@@ -119,6 +123,7 @@ export default function WarehouseManagement() {
     }));
   };
 
+  // Menyimpan data gudang baru atau perubahan gudang.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -158,6 +163,7 @@ export default function WarehouseManagement() {
     }
   };
 
+  // Mengaktifkan atau menonaktifkan gudang yang dipilih.
   const toggleWarehouseStatus = async (warehouse: Warehouse) => {
     const newStatus = !warehouse.isActive;
     const confirmation = window.confirm(

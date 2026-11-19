@@ -50,6 +50,7 @@ interface ApprovalHistory {
   };
 }
 
+// Menampilkan daftar persetujuan dan menangani keputusan approver.
 export default function ApprovalManagement() {
   const [pending, setPending] = useState<Requisition[]>([]);
   const [history, setHistory] = useState<ApprovalHistory[]>([]);
@@ -61,6 +62,7 @@ export default function ApprovalManagement() {
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
   const [error, setError] = useState("");
 
+  // Memformat tanggal persetujuan untuk tampilan.
   const formatDate = (date?: string | null) => {
     if (!date) return "-";
 
@@ -71,6 +73,7 @@ export default function ApprovalManagement() {
     });
   };
 
+  // Memformat nilai pengajuan sebagai mata uang rupiah.
   const formatCurrency = (value: string | number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -79,6 +82,7 @@ export default function ApprovalManagement() {
     }).format(Number(value));
   };
 
+  // Memuat daftar persetujuan dan data pendukung.
   const loadData = async () => {
     try {
       setLoading(true);
@@ -105,6 +109,7 @@ export default function ApprovalManagement() {
     loadData();
   }, []);
 
+  // Memuat rincian requisition yang akan ditinjau.
   const openDetail = async (id: number) => {
     try {
       setError("");
@@ -118,6 +123,7 @@ export default function ApprovalManagement() {
     }
   };
 
+  // Mengirim keputusan persetujuan untuk requisition yang dipilih.
   const handleApprove = async () => {
     if (!selected || processing) return;
 
@@ -161,6 +167,7 @@ export default function ApprovalManagement() {
     }
   };
 
+  // Mengirim keputusan penolakan beserta alasannya.
   const handleReject = async () => {
     if (!selected) return;
 
@@ -191,6 +198,7 @@ export default function ApprovalManagement() {
     }
   };
 
+  // Menutup dialog rincian persetujuan.
   const closeDetail = () => {
     setSelected(null);
     setShowReject(false);

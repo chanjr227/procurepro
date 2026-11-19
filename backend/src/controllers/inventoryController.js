@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 
 // GET /api/inventory
+// Mengambil daftar item inventaris.
 const getInventory = async (req, res) => {
   try {
     const items = await prisma.inventoryItem.findMany({
@@ -43,6 +44,7 @@ const getInventory = async (req, res) => {
 };
 
 // POST /api/inventory
+// Membuat item inventaris baru.
 const createInventoryItem = async (req, res) => {
   try {
     const { itemCode, itemName, description, category, unit, minimumStock } =
@@ -92,6 +94,7 @@ const createInventoryItem = async (req, res) => {
 };
 
 // GET /api/inventory/:id
+// Mengambil rincian item inventaris berdasarkan ID.
 const getInventoryDetail = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -140,6 +143,7 @@ const getInventoryDetail = async (req, res) => {
 };
 
 // PUT /api/inventory/:id
+// Memperbarui informasi item inventaris.
 const updateInventoryItem = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -201,6 +205,7 @@ const updateInventoryItem = async (req, res) => {
 };
 
 // GET /api/inventory/summary
+// Menghitung ringkasan jumlah dan kondisi item inventaris.
 const getInventorySummary = async (req, res) => {
   try {
     const [totalItems, stocks, lowStockItems] = await Promise.all([

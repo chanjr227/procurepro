@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 
 // GET /api/stock-transactions
+// Mengambil daftar transaksi pergerakan stok.
 const getStockTransactions = async (req, res) => {
   try {
     const transactions = await prisma.stockTransaction.findMany({
@@ -27,6 +28,7 @@ const getStockTransactions = async (req, res) => {
 };
 
 // POST /api/stock-transactions
+// Mencatat transaksi baru dan menyesuaikan jumlah stok.
 const createStockTransaction = async (req, res) => {
   try {
     const {

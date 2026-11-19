@@ -92,6 +92,7 @@ const statusLabels: Record<POStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+// Memformat nilai purchase order dalam mata uang rupiah.
 const formatRupiah = (amount: number | string) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -99,6 +100,7 @@ const formatRupiah = (amount: number | string) =>
     maximumFractionDigits: 0,
   }).format(Number(amount || 0));
 
+// Memformat tanggal purchase order untuk tampilan.
 const formatDate = (date?: string | null) => {
   if (!date) return "-";
 
@@ -109,6 +111,7 @@ const formatDate = (date?: string | null) => {
   });
 };
 
+// Mengambil pesan yang sesuai dari error API atau fallback.
 const getErrorMessage = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     return (
@@ -132,6 +135,7 @@ const getAllowedStatuses = (status: POStatus): POStatus[] => {
   return transitions[status];
 };
 
+// Menampilkan dan mengelola purchase order.
 export default function PurchaseOrders() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -173,6 +177,7 @@ export default function PurchaseOrders() {
   // LOAD PURCHASE ORDERS
   // =====================================
 
+  // Memuat daftar purchase order dari backend.
   const loadOrders = async () => {
     try {
       setLoading(true);
@@ -203,6 +208,7 @@ export default function PurchaseOrders() {
   // LOAD OPTIONS
   // =====================================
 
+  // Memuat data pilihan yang diperlukan pada formulir purchase order.
   const loadOptions = async () => {
     try {
       const response = await api.get("/purchase-orders/options");
@@ -233,6 +239,7 @@ export default function PurchaseOrders() {
   // SUMMARY
   // =====================================
 
+  // Menghitung purchase order berdasarkan status.
   const getStatusCount = (status: POStatus) => {
     return summary.find((item) => item.status === status)?._count.id || 0;
   };
@@ -246,6 +253,7 @@ export default function PurchaseOrders() {
   // SELECT REQUISITION
   // =====================================
 
+  // Memperbarui pilihan requisition dan data formulir terkait.
   const handleRequisitionChange = (requisitionId: string) => {
     const requisition = requisitions.find(
       (item) => item.id === Number(requisitionId),
@@ -277,6 +285,7 @@ export default function PurchaseOrders() {
   // CALCULATE TOTAL
   // =====================================
 
+  // Menghitung subtotal dari seluruh item pada formulir.
   const subtotal = useMemo(() => {
     return formItems.reduce((total, item) => {
       const quantity = Number(item.quantity);
@@ -293,6 +302,7 @@ export default function PurchaseOrders() {
   // RESET FORM
   // =====================================
 
+  // Mengosongkan formulir purchase order.
   const resetForm = () => {
     setForm({
       vendorId: "",
@@ -312,6 +322,7 @@ export default function PurchaseOrders() {
   // CREATE / UPDATE PURCHASE ORDER
   // =====================================
 
+  // Membuat purchase order baru atau menyimpan perubahan.
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -395,6 +406,7 @@ export default function PurchaseOrders() {
   // EDIT DRAFT PURCHASE ORDER
   // =====================================
 
+  // Menyiapkan data purchase order untuk diedit.
   const handleEdit = (order: PurchaseOrder) => {
     if (order.status !== "DRAFT") {
       alert("Hanya PO berstatus DRAFT yang dapat diedit.");
@@ -433,6 +445,7 @@ export default function PurchaseOrders() {
   // UPDATE ITEM PRICE
   // =====================================
 
+  // Memperbarui harga pada baris item yang dipilih.
   const updateItemPrice = (index: number, value: string) => {
     setFormItems((previous) =>
       previous.map((item, itemIndex) =>
@@ -445,6 +458,7 @@ export default function PurchaseOrders() {
   // UPDATE INVENTORY ITEM
   // =====================================
 
+  // Memperbarui pilihan barang pada baris purchase order.
   const updateInventoryItem = (index: number, value: string) => {
     setFormItems((previous) =>
       previous.map((item, itemIndex) =>
@@ -457,6 +471,7 @@ export default function PurchaseOrders() {
   // UPDATE STATUS
   // =====================================
 
+  // Mengirim perubahan status purchase order ke backend.
   const updateStatus = async (order: PurchaseOrder, status: POStatus) => {
     if (!getAllowedStatuses(order.status).includes(status)) {
       alert("Perubahan status tersebut tidak diperbolehkan.");
@@ -489,6 +504,7 @@ export default function PurchaseOrders() {
   // VIEW DETAIL
   // =====================================
 
+  // Memuat dan menampilkan detail purchase order.
   const handleViewDetail = async (id: number) => {
     try {
       const response = await api.get(`/purchase-orders/${id}`);

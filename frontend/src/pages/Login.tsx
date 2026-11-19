@@ -13,6 +13,7 @@ interface LoginProps {
   }) => void;
 }
 
+// Menampilkan formulir login pengguna.
 export default function Login({ onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +21,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Mengirim kredensial login dan meneruskan hasil autentikasi.
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");

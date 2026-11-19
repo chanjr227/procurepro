@@ -1,6 +1,7 @@
 const prisma = require("../lib/prisma");
 
 // GET: Menampilkan semua requisitions
+// Mengambil daftar requisition milik pengguna atau ruang lingkup yang diizinkan.
 const getRequisitions = async (req, res) => {
   try {
     const { search, status } = req.query;
@@ -47,6 +48,7 @@ const getRequisitions = async (req, res) => {
 };
 
 // GET: Menampilkan satu requisition berdasarkan ID
+// Mengambil rincian requisition berdasarkan ID.
 const getRequisitionById = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -92,6 +94,7 @@ const getRequisitionById = async (req, res) => {
 };
 
 // POST: Membuat requisition baru
+// Membuat requisition baru beserta item yang diajukan.
 const createRequisition = async (req, res) => {
   try {
     const { title, description, department, neededDate, items } = req.body;
@@ -174,6 +177,7 @@ const createRequisition = async (req, res) => {
 };
 
 // PUT: Mengubah requisition yang masih berstatus DRAFT
+// Memperbarui requisition yang masih dapat diubah.
 const updateRequisition = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -292,6 +296,7 @@ const updateRequisition = async (req, res) => {
 };
 
 // DELETE: Menghapus requisition yang masih berstatus DRAFT
+// Menghapus requisition berdasarkan ID.
 const deleteRequisition = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -346,6 +351,7 @@ const deleteRequisition = async (req, res) => {
 };
 
 // POST: Mengajukan requisition untuk persetujuan
+// Mengirim requisition untuk proses persetujuan.
 const submitRequisition = async (req, res) => {
   try {
     const id = Number(req.params.id);

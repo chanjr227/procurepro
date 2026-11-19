@@ -87,6 +87,7 @@ const statusLabels: Record<ReceiptStatus, string> = {
   COMPLETED: "Completed",
 };
 
+// Memformat tanggal penerimaan untuk tampilan.
 const formatDate = (date?: string | null) => {
   if (!date) return "-";
 
@@ -97,9 +98,11 @@ const formatDate = (date?: string | null) => {
   });
 };
 
+// Memformat jumlah numerik agar mudah dibaca.
 const formatNumber = (value: number) =>
   new Intl.NumberFormat("id-ID").format(value);
 
+// Mengambil pesan yang sesuai dari error API atau fallback.
 const getErrorMessage = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     return (
@@ -111,6 +114,7 @@ const getErrorMessage = (error: unknown) => {
   return "Terjadi kesalahan. Silakan coba kembali.";
 };
 
+// Menampilkan dan mengelola penerimaan barang.
 export default function GoodsReceipt() {
   const [receipts, setReceipts] = useState<GoodsReceipt[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderOption[]>(
@@ -146,6 +150,7 @@ export default function GoodsReceipt() {
   // LOAD GOODS RECEIPTS
   // =====================================
 
+  // Memuat daftar penerimaan barang dari backend.
   const loadReceipts = async () => {
     try {
       setLoading(true);
@@ -176,6 +181,7 @@ export default function GoodsReceipt() {
   // LOAD PURCHASE ORDER + WAREHOUSE
   // =====================================
 
+  // Memuat purchase order yang tersedia untuk diterima.
   const loadPurchaseOrders = async () => {
     try {
       setLoadingOptions(true);
@@ -231,6 +237,7 @@ export default function GoodsReceipt() {
   // SELECT PURCHASE ORDER
   // =====================================
 
+  // Memperbarui pilihan purchase order dan data terkait pada formulir.
   const handlePurchaseOrderChange = (purchaseOrderId: string) => {
     setForm((previous) => ({
       ...previous,
@@ -340,6 +347,7 @@ export default function GoodsReceipt() {
   // RESET FORM
   // =====================================
 
+  // Mengosongkan formulir penerimaan barang.
   const resetForm = () => {
     setForm({
       purchaseOrderId: "",
@@ -356,6 +364,7 @@ export default function GoodsReceipt() {
   // CREATE GOODS RECEIPT
   // =====================================
 
+  // Mengirim data penerimaan barang untuk disimpan.
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -408,6 +417,7 @@ export default function GoodsReceipt() {
   // VIEW DETAIL
   // =====================================
 
+  // Memuat dan menampilkan detail penerimaan barang.
   const handleViewDetail = async (id: number) => {
     try {
       setErrorMessage("");

@@ -15,6 +15,7 @@ const allowedFields = [
   "status",
 ];
 
+// Menyaring dan menormalkan data vendor dari input request.
 function cleanVendorData(body) {
   const data = {};
 
@@ -45,6 +46,7 @@ function cleanVendorData(body) {
 }
 
 // GET: Semua vendor
+// Mengambil daftar vendor.
 const getVendors = async (req, res) => {
   try {
     const { search = "", status } = req.query;
@@ -90,6 +92,7 @@ const getVendors = async (req, res) => {
 };
 
 // GET: Detail vendor
+// Mengambil rincian vendor berdasarkan ID.
 const getVendorById = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -127,6 +130,7 @@ const getVendorById = async (req, res) => {
 };
 
 // POST: Tambah vendor
+// Membuat data vendor baru.
 const createVendor = async (req, res) => {
   try {
     const data = cleanVendorData(req.body || {});
@@ -181,6 +185,7 @@ const createVendor = async (req, res) => {
 };
 
 // PUT: Edit vendor
+// Memperbarui informasi vendor.
 const updateVendor = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -251,6 +256,7 @@ const updateVendor = async (req, res) => {
 };
 
 // DELETE: Hapus vendor
+// Menghapus data vendor berdasarkan ID.
 const deleteVendor = async (req, res) => {
   try {
     const id = Number(req.params.id);

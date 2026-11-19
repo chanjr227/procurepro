@@ -31,6 +31,7 @@ const initialForm: InventoryForm = {
   minimumStock: "0",
 };
 
+// Menampilkan dan mengelola data item inventaris.
 export default function InventoryItems() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ export default function InventoryItems() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Memuat daftar item inventaris dari backend.
   const loadItems = async () => {
     try {
       setLoading(true);
@@ -77,6 +79,7 @@ export default function InventoryItems() {
     );
   }, [items, search]);
 
+  // Membuka formulir untuk menambahkan item inventaris.
   const openCreateModal = () => {
     setEditingId(null);
     setForm(initialForm);
@@ -85,6 +88,7 @@ export default function InventoryItems() {
     setShowModal(true);
   };
 
+  // Membuka formulir dengan data item inventaris yang dipilih.
   const openEditModal = (item: InventoryItem) => {
     setEditingId(item.id);
     setForm({
@@ -113,6 +117,7 @@ export default function InventoryItems() {
     }));
   };
 
+  // Menyimpan item inventaris baru atau perubahan item.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 

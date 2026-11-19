@@ -45,6 +45,7 @@ interface StockRow {
   isLowStock: boolean;
 }
 
+// Menampilkan saldo stok inventaris per gudang.
 const InventoryStock = () => {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [summary, setSummary] = useState<InventorySummary>({
@@ -58,6 +59,7 @@ const InventoryStock = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Memuat data stok inventaris dari backend.
   const loadInventoryStock = async () => {
     try {
       setLoading(true);
@@ -153,6 +155,7 @@ const InventoryStock = () => {
     });
   }, [stockRows, search, warehouseFilter]);
 
+  // Memformat jumlah stok agar mudah dibaca.
   const formatNumber = (value: number) =>
     new Intl.NumberFormat("id-ID").format(value || 0);
 

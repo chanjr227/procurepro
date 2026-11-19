@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 
+// Memvalidasi JWT dari request sebelum mengizinkan akses ke endpoint terlindungi.
 const authenticate = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
