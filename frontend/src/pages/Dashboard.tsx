@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
+import api from "../services/api";
+
 import "../css/dashboard.css";
+import "../css/notification.css";
 import VendorManagement from "./VendorManagement";
 import Requisitions from "./Requisitions";
 import ApprovalManagement from "./ApprovalManagement";
@@ -147,6 +150,29 @@ interface DashboardProps {
   activePage: string;
 }
 
+interface LowStockAlert {
+  id: string;
+  inventoryItemId: number;
+  warehouseId: number;
+  itemCode: string;
+  itemName: string;
+  category: string;
+  unit: string;
+  currentStock: number;
+  minimumStock: number;
+  warehouseCode: string;
+  warehouseName: string;
+  severity: "OUT_OF_STOCK" | "LOW_STOCK";
+  message: string;
+  updatedAt: string;
+}
+
+interface LowStockSummary {
+  totalAlerts: number;
+  outOfStock: number;
+  lowStock: number;
+}
+
 export default function Dashboard({
   user,
   onLogout,
@@ -155,6 +181,46 @@ export default function Dashboard({
 }: DashboardProps) {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [search, setSearch] = useState("");
+
+  const [alerts, setAlerts] = useState<LowStockAlert[]>([]);
+
+  const [notificationSummary, setNotificationSummary] =
+    useState<LowStockSummary>({
+      totalAlerts: 0,
+      outOfStock: 0,
+      lowStock: 0,
+    });
+
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const fetchLowStockAlerts = async () => {
+      try {
+        const response = await api.get("/low-stock-alerts");
+
+        const result = response.data.data;
+
+        setAlerts(result.alerts || []);
+        setNotificationSummary(
+          result.summary || {
+            totalAlerts: 0,
+            outOfStock: 0,
+            lowStock: 0,
+          },
+        );
+      } catch (error) {
+        console.error("Gagal mengambil notifikasi stok:", error);
+      }
+    };
+
+    fetchLowStockAlerts();
+
+    const interval = setInterval(() => {
+      fetchLowStockAlerts();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (activePage === "vendors") {
@@ -334,13 +400,141 @@ export default function Dashboard({
               <kbd>⌘ K</kbd>
             </label>
 
-            <button
-              className="notification-button"
-              title="Notifications"
-              type="button"
-            >
-              ♧<i />
-            </button>
+            <div className="notification-wrapper">
+              <button
+                className="notification-button"
+                title="Notifications"
+                type="button"
+                onClick={() => setShowNotifications(!showNotifications)}
+                aria-expanded={showNotifications}
+              >
+                <span className="notification-bell">♧</span>
+
+                {notificationSummary.totalAlerts > 0 && (
+                  <span className="notification-badge">
+                    {notificationSummary.totalAlerts > 99
+                      ? "99+"
+                      : notificationSummary.totalAlerts}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="notification-dropdown">
+                  <div className="notification-header">
+                    <div>
+                      <h3>Notifikasi Stok</h3>
+                      <p>
+                        {notificationSummary.totalAlerts} notifikasi perlu
+                        diperhatikan
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="notification-close"
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="notification-summary">
+                    <div>
+                      <strong>{notificationSummary.outOfStock}</strong>
+                      <span>Habis</span>
+                    </div>
+
+                    <div>
+                      <strong>{notificationSummary.lowStock}</strong>
+                      <span>Stok Minimum</span>
+                    </div>
+                  </div>
+
+                  <div className="notification-list">
+                    {alerts.length === 0 ? (
+                      <div className="notification-empty">
+                        <span>✓</span>
+                        <strong>Tidak ada peringatan stok</strong>
+                        <p>Semua stok masih dalam kondisi aman.</p>
+                      </div>
+                    ) : (
+                      alerts.map((alert) => (
+                        <button
+                          type="button"
+                          className="notification-item"
+                          key={alert.id}
+                          onClick={() => {
+                            setShowNotifications(false);
+                            onNavigate("inventory-stock");
+                          }}
+                        >
+                          <div
+                            className={`notification-status ${
+                              alert.severity === "OUT_OF_STOCK"
+                                ? "out-of-stock"
+                                : "low-stock"
+                            }`}
+                          >
+                            !
+                          </div>
+
+                          <div className="notification-item-content">
+                            <div className="notification-item-top">
+                              <strong>{alert.itemName}</strong>
+
+                              <span
+                                className={`notification-label ${
+                                  alert.severity === "OUT_OF_STOCK"
+                                    ? "out-of-stock"
+                                    : "low-stock"
+                                }`}
+                              >
+                                {alert.severity === "OUT_OF_STOCK"
+                                  ? "Habis"
+                                  : "Stok Minimum"}
+                              </span>
+                            </div>
+
+                            <p>{alert.warehouseName}</p>
+
+                            <div className="notification-stock-info">
+                              <span>
+                                Stok:{" "}
+                                <strong>
+                                  {alert.currentStock} {alert.unit}
+                                </strong>
+                              </span>
+
+                              <span>
+                                Minimum:{" "}
+                                <strong>
+                                  {alert.minimumStock} {alert.unit}
+                                </strong>
+                              </span>
+                            </div>
+
+                            <small>{alert.message}</small>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="notification-footer">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNotifications(false);
+                        onNavigate("inventory-stock");
+                      }}
+                    >
+                      Lihat Inventory Stock →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="topbar-profile">
               <div className="user-avatar">
