@@ -10,6 +10,7 @@ import InventoryItems from "./InventoryItems";
 import WarehouseManagement from "./Warehouse";
 import InventoryStock from "./InventoryStock";
 import StockTransactions from "./StockTransactions";
+import StockOpname from "./StockOpname";
 
 const stats = [
   {
@@ -130,6 +131,7 @@ const menuGroups = [
       { label: "Warehouses", icon: "▦" },
       { label: "Inventory Stock", icon: "▧" },
       { label: "Stock Transactions", icon: "↔" },
+      { label: "Stock Opname", icon: "✓" },
     ],
   },
 ];
@@ -173,6 +175,8 @@ export default function Dashboard({
       setActiveMenu("Inventory Stock");
     } else if (activePage === "stock-transactions") {
       setActiveMenu("Stock Transactions");
+    } else if (activePage === "stock-opname") {
+      setActiveMenu("Stock Opname");
     } else {
       setActiveMenu("Dashboard");
     }
@@ -218,6 +222,11 @@ export default function Dashboard({
 
     if (label === "Inventory Stock") {
       onNavigate("inventory-stock");
+      return;
+    }
+
+    if (label === "Stock Opname") {
+      onNavigate("stock-opname");
       return;
     }
 
@@ -369,6 +378,8 @@ export default function Dashboard({
             <StockTransactions />
           ) : activePage === "warehouses" ? (
             <WarehouseManagement />
+          ) : activePage === "stock-opname" ? (
+            <StockOpname />
           ) : (
             <>
               <section className="dashboard-welcome">
