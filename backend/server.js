@@ -13,6 +13,7 @@ const goodsReceiptRoutes = require("./src/routes/goodsReceiptRoutes");
 const inventoryRoutes = require("./src/routes/inventoryRoutes");
 const warehouseRoutes = require("./src/routes/warehouseRoutes");
 const stockTransactionRoutes = require("./src/routes/stockTransactionRoutes");
+const stockOpnameRoutes = require("./src/routes/stockOpnameRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,6 +45,7 @@ app.use("/api/goods-receipts", goodsReceiptRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/warehouses", warehouseRoutes);
 app.use("/api/stock-transactions", stockTransactionRoutes);
+app.use("/api/stock-opnames", stockOpnameRoutes);
 
 // Homepage
 app.get("/", (req, res) => {
