@@ -14,6 +14,7 @@ import WarehouseManagement from "./Warehouse";
 import InventoryStock from "./InventoryStock";
 import StockTransactions from "./StockTransactions";
 import StockOpname from "./StockOpname";
+import Invoices from "./Invoices";
 
 const stats = [
   {
@@ -228,89 +229,48 @@ export default function Dashboard({
   }, []);
 
   // Menyamakan menu aktif dengan halaman yang sedang dibuka.
+  // Menyamakan menu aktif dengan halaman yang sedang dibuka.
   useEffect(() => {
-    if (activePage === "vendors") {
-      setActiveMenu("Vendors");
-    } else if (activePage === "requisitions") {
-      setActiveMenu("Requisitions");
-    } else if (activePage === "approvals") {
-      setActiveMenu("Approvals");
-    } else if (activePage === "purchase-orders") {
-      setActiveMenu("Purchase Orders");
-    } else if (activePage === "goods-receipts") {
-      setActiveMenu("Goods Receipt");
-    } else if (activePage === "inventory-items") {
-      setActiveMenu("Inventory Items");
-    } else if (activePage === "warehouses") {
-      setActiveMenu("Warehouses");
-    } else if (activePage === "inventory-stock") {
-      setActiveMenu("Inventory Stock");
-    } else if (activePage === "stock-transactions") {
-      setActiveMenu("Stock Transactions");
-    } else if (activePage === "stock-opname") {
-      setActiveMenu("Stock Opname");
-    } else {
-      setActiveMenu("Dashboard");
-    }
-  }, [activePage]);
+    const pageMenuMap: Record<string, string> = {
+      dashboard: "Dashboard",
+      vendors: "Vendors",
+      requisitions: "Requisitions",
+      approvals: "Approvals",
+      "purchase-orders": "Purchase Orders",
+      "goods-receipts": "Goods Receipt",
+      invoices: "Invoices",
+      "inventory-items": "Inventory Items",
+      warehouses: "Warehouses",
+      "inventory-stock": "Inventory Stock",
+      "stock-transactions": "Stock Transactions",
+      "stock-opname": "Stock Opname",
+    };
 
+    setActiveMenu(pageMenuMap[activePage] || "Dashboard");
+  }, [activePage]);
+  // Membuka halaman sesuai menu yang dipilih pengguna.
   // Membuka halaman sesuai menu yang dipilih pengguna.
   const handleMenuClick = (label: string) => {
-    setActiveMenu(label);
+    const pageMap: Record<string, string> = {
+      Dashboard: "dashboard",
+      Vendors: "vendors",
+      Requisitions: "requisitions",
+      Approvals: "approvals",
+      "Purchase Orders": "purchase-orders",
+      "Goods Receipt": "goods-receipts",
+      Invoices: "invoices",
+      "Inventory Items": "inventory-items",
+      Warehouses: "warehouses",
+      "Inventory Stock": "inventory-stock",
+      "Stock Transactions": "stock-transactions",
+      "Stock Opname": "stock-opname",
+    };
 
-    if (label === "Vendors") {
-      onNavigate("vendors");
-      return;
-    }
+    const page = pageMap[label];
 
-    if (label === "Requisitions") {
-      onNavigate("requisitions");
-      return;
-    }
-
-    if (label === "Inventory Items") {
-      onNavigate("inventory-items");
-      return;
-    }
-
-    if (label === "Approvals") {
-      onNavigate("approvals");
-      return;
-    }
-
-    if (label === "Purchase Orders") {
-      onNavigate("purchase-orders");
-      return;
-    }
-
-    if (label === "Warehouses") {
-      onNavigate("warehouses");
-      return;
-    }
-
-    if (label === "Stock Transactions") {
-      onNavigate("stock-transactions");
-      return;
-    }
-
-    if (label === "Inventory Stock") {
-      onNavigate("inventory-stock");
-      return;
-    }
-
-    if (label === "Stock Opname") {
-      onNavigate("stock-opname");
-      return;
-    }
-
-    if (label === "Goods Receipt") {
-      onNavigate("goods-receipts");
-      return;
-    }
-
-    if (label === "Dashboard") {
-      onNavigate("dashboard");
-      return;
+    if (page) {
+      setActiveMenu(label);
+      onNavigate(page);
     }
   };
 
@@ -338,32 +298,34 @@ export default function Dashboard({
           {menuGroups.map(
             // Menampilkan setiap kelompok menu pada sidebar.
             (group) => (
-            <div className="menu-group" key={group.title}>
-              <p className="menu-heading">{group.title}</p>
+              <div className="menu-group" key={group.title}>
+                <p className="menu-heading">{group.title}</p>
 
-              {group.items.map(
-                // Menampilkan item menu beserta status aktifnya.
-                (item) => (
-                <button
-                  key={item.label}
-                  className={`sidebar-link ${
-                    activeMenu === item.label ? "active" : ""
-                  }`}
-                  onClick={
-                    // Menangani pemilihan item menu.
-                    () => handleMenuClick(item.label)
-                  }
-                >
-                  <span className="sidebar-icon">{item.icon}</span>
-                  <span>{item.label}</span>
+                {group.items.map(
+                  // Menampilkan item menu beserta status aktifnya.
+                  (item) => (
+                    <button
+                      key={item.label}
+                      className={`sidebar-link ${
+                        activeMenu === item.label ? "active" : ""
+                      }`}
+                      onClick={
+                        // Menangani pemilihan item menu.
+                        () => handleMenuClick(item.label)
+                      }
+                    >
+                      <span className="sidebar-icon">{item.icon}</span>
+                      <span>{item.label}</span>
 
-                  {item.count && (
-                    <span className="menu-count">{item.count}</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          ))}
+                      {item.count && (
+                        <span className="menu-count">{item.count}</span>
+                      )}
+                    </button>
+                  ),
+                )}
+              </div>
+            ),
+          )}
         </nav>
 
         <div className="sidebar-bottom">
@@ -488,67 +450,68 @@ export default function Dashboard({
                       alerts.map(
                         // Menampilkan detail untuk setiap peringatan stok.
                         (alert) => (
-                        <button
-                          type="button"
-                          className="notification-item"
-                          key={alert.id}
-                          onClick={
-                            // Membuka halaman stok setelah notifikasi dipilih.
-                            () => {
-                            setShowNotifications(false);
-                            onNavigate("inventory-stock");
+                          <button
+                            type="button"
+                            className="notification-item"
+                            key={alert.id}
+                            onClick={
+                              // Membuka halaman stok setelah notifikasi dipilih.
+                              () => {
+                                setShowNotifications(false);
+                                onNavigate("inventory-stock");
+                              }
                             }
-                          }
-                        >
-                          <div
-                            className={`notification-status ${
-                              alert.severity === "OUT_OF_STOCK"
-                                ? "out-of-stock"
-                                : "low-stock"
-                            }`}
                           >
-                            !
-                          </div>
-
-                          <div className="notification-item-content">
-                            <div className="notification-item-top">
-                              <strong>{alert.itemName}</strong>
-
-                              <span
-                                className={`notification-label ${
-                                  alert.severity === "OUT_OF_STOCK"
-                                    ? "out-of-stock"
-                                    : "low-stock"
-                                }`}
-                              >
-                                {alert.severity === "OUT_OF_STOCK"
-                                  ? "Habis"
-                                  : "Stok Minimum"}
-                              </span>
+                            <div
+                              className={`notification-status ${
+                                alert.severity === "OUT_OF_STOCK"
+                                  ? "out-of-stock"
+                                  : "low-stock"
+                              }`}
+                            >
+                              !
                             </div>
 
-                            <p>{alert.warehouseName}</p>
+                            <div className="notification-item-content">
+                              <div className="notification-item-top">
+                                <strong>{alert.itemName}</strong>
 
-                            <div className="notification-stock-info">
-                              <span>
-                                Stok:{" "}
-                                <strong>
-                                  {alert.currentStock} {alert.unit}
-                                </strong>
-                              </span>
+                                <span
+                                  className={`notification-label ${
+                                    alert.severity === "OUT_OF_STOCK"
+                                      ? "out-of-stock"
+                                      : "low-stock"
+                                  }`}
+                                >
+                                  {alert.severity === "OUT_OF_STOCK"
+                                    ? "Habis"
+                                    : "Stok Minimum"}
+                                </span>
+                              </div>
 
-                              <span>
-                                Minimum:{" "}
-                                <strong>
-                                  {alert.minimumStock} {alert.unit}
-                                </strong>
-                              </span>
+                              <p>{alert.warehouseName}</p>
+
+                              <div className="notification-stock-info">
+                                <span>
+                                  Stok:{" "}
+                                  <strong>
+                                    {alert.currentStock} {alert.unit}
+                                  </strong>
+                                </span>
+
+                                <span>
+                                  Minimum:{" "}
+                                  <strong>
+                                    {alert.minimumStock} {alert.unit}
+                                  </strong>
+                                </span>
+                              </div>
+
+                              <small>{alert.message}</small>
                             </div>
-
-                            <small>{alert.message}</small>
-                          </div>
-                        </button>
-                      ))
+                          </button>
+                        ),
+                      )
                     )}
                   </div>
 
@@ -558,8 +521,8 @@ export default function Dashboard({
                       onClick={
                         // Membuka halaman stok dari tautan pada panel notifikasi.
                         () => {
-                        setShowNotifications(false);
-                        onNavigate("inventory-stock");
+                          setShowNotifications(false);
+                          onNavigate("inventory-stock");
                         }
                       }
                     >
@@ -598,6 +561,8 @@ export default function Dashboard({
             <PurchaseOrders />
           ) : activePage === "goods-receipts" ? (
             <GoodsReceipt />
+          ) : activePage === "invoices" ? (
+            <Invoices />
           ) : activePage === "inventory-items" ? (
             <InventoryItems />
           ) : activePage === "inventory-stock" ? (
@@ -634,20 +599,21 @@ export default function Dashboard({
                 {stats.map(
                   // Menampilkan setiap kartu statistik dashboard.
                   (stat) => (
-                  <article className="stat-card" key={stat.label}>
-                    <div className="stat-card-top">
-                      <span>{stat.label}</span>
-                      <div className="stat-icon">{stat.icon}</div>
-                    </div>
+                    <article className="stat-card" key={stat.label}>
+                      <div className="stat-card-top">
+                        <span>{stat.label}</span>
+                        <div className="stat-icon">{stat.icon}</div>
+                      </div>
 
-                    <h2>{stat.value}</h2>
+                      <h2>{stat.value}</h2>
 
-                    <div className="stat-card-bottom">
-                      <span className="stat-change">{stat.change}</span>
-                      <span>vs last month</span>
-                    </div>
-                  </article>
-                ))}
+                      <div className="stat-card-bottom">
+                        <span className="stat-change">{stat.change}</span>
+                        <span>vs last month</span>
+                      </div>
+                    </article>
+                  ),
+                )}
               </section>
 
               <section className="dashboard-middle-grid">
@@ -808,28 +774,29 @@ export default function Dashboard({
                           .filter(
                             // Memilih pesanan yang cocok dengan kata kunci pencarian.
                             (order) =>
-                            `${order.id} ${order.vendor} ${order.status}`
-                              .toLowerCase()
-                              .includes(search.toLowerCase()),
+                              `${order.id} ${order.vendor} ${order.status}`
+                                .toLowerCase()
+                                .includes(search.toLowerCase()),
                           )
                           .map(
                             // Menampilkan baris untuk setiap pesanan yang cocok.
                             (order) => (
-                            <tr key={order.id}>
-                              <td className="order-id">{order.id}</td>
-                              <td>{order.vendor}</td>
-                              <td>{order.date}</td>
-                              <td className="order-amount">{order.amount}</td>
-                              <td>
-                                <span
-                                  className={`order-status ${order.status.toLowerCase()}`}
-                                >
-                                  <i />
-                                  {order.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                              <tr key={order.id}>
+                                <td className="order-id">{order.id}</td>
+                                <td>{order.vendor}</td>
+                                <td>{order.date}</td>
+                                <td className="order-amount">{order.amount}</td>
+                                <td>
+                                  <span
+                                    className={`order-status ${order.status.toLowerCase()}`}
+                                  >
+                                    <i />
+                                    {order.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ),
+                          )}
                       </tbody>
                     </table>
                   </div>
@@ -850,15 +817,16 @@ export default function Dashboard({
                     {activities.map(
                       // Menampilkan setiap aktivitas terbaru.
                       (activity, index) => (
-                      <div className="activity-item" key={index}>
-                        <div className="activity-icon">{activity.icon}</div>
-                        <div className="activity-detail">
-                          <strong>{activity.title}</strong>
-                          <span>{activity.detail}</span>
-                          <small>{activity.time}</small>
+                        <div className="activity-item" key={index}>
+                          <div className="activity-icon">{activity.icon}</div>
+                          <div className="activity-detail">
+                            <strong>{activity.title}</strong>
+                            <span>{activity.detail}</span>
+                            <small>{activity.time}</small>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </article>
               </section>

@@ -57,10 +57,10 @@ const roundMoney = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
 const getInvoiceNumber = () => `INV-${Date.now()}`;
 
 // =====================================================
-// HELPER THREE-WAY MATCHING
+// THREE-WAY MATCHING
 // =====================================================
-const calculateInvoiceMatching = async (db, invoiceId) => {
-  const invoice = await db.invoice.findUnique({
+const calculateInvoiceMatching = async (tx, invoiceId) => {
+  const invoice = await tx.invoice.findUnique({
     where: { id: invoiceId },
     include: {
       purchaseOrder: true,
@@ -81,7 +81,7 @@ const calculateInvoiceMatching = async (db, invoiceId) => {
   for (const item of invoice.items) {
     const poItem = item.purchaseOrderItem;
 
-    const receiptAggregate = await db.goodsReceiptItem.aggregate({
+    const received = await tx.goodsReceiptItem.aggregate({
       where: {
         purchaseOrderItemId: poItem.id,
         goodsReceipt: {
@@ -95,11 +95,14 @@ const calculateInvoiceMatching = async (db, invoiceId) => {
       },
     });
 
-    const receivedQuantity = receiptAggregate._sum.quantityReceived || 0;
+    const receivedQuantity = received._sum.quantityReceived || 0;
 
-    const invoiceAggregate = await db.invoiceItem.aggregate({
+    const invoiced = await tx.invoiceItem.aggregate({
       where: {
         purchaseOrderItemId: poItem.id,
+        invoiceId: {
+          not: invoice.id,
+        },
         invoice: {
           is: {
             purchaseOrderId: invoice.purchaseOrderId,
@@ -114,15 +117,18 @@ const calculateInvoiceMatching = async (db, invoiceId) => {
       },
     });
 
-    const totalInvoicedQuantity = invoiceAggregate._sum.quantity || 0;
+    const previousInvoiceQuantity = invoiced._sum.quantity || 0;
 
-    const invoiceQuantity = item.quantity;
+    const availableQuantity = Math.max(
+      0,
+      receivedQuantity - previousInvoiceQuantity,
+    );
+
+    const quantityMatch = item.quantity <= availableQuantity;
 
     const priceMatch =
       roundMoney(toNumber(item.unitPrice)) ===
       roundMoney(toNumber(poItem.unitPrice));
-
-    const quantityMatch = totalInvoicedQuantity <= receivedQuantity;
 
     matchingItems.push({
       invoiceItemId: item.id,
@@ -132,15 +138,16 @@ const calculateInvoiceMatching = async (db, invoiceId) => {
 
       orderedQuantity: poItem.quantity,
       receivedQuantity,
-      invoiceQuantity,
-      totalInvoicedQuantity,
+      previousInvoiceQuantity,
+      availableQuantity,
+      invoiceQuantity: item.quantity,
 
       poUnitPrice: toNumber(poItem.unitPrice),
       invoiceUnitPrice: toNumber(item.unitPrice),
 
-      priceMatch,
       quantityMatch,
-      matched: priceMatch && quantityMatch,
+      priceMatch,
+      matched: quantityMatch && priceMatch,
     });
   }
 
@@ -202,28 +209,30 @@ const getInvoices = async (req, res) => {
       ];
     }
 
-    const invoices = await prisma.invoice.findMany({
-      where,
-      include: invoiceInclude,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const [invoices, grouped] = await Promise.all([
+      prisma.invoice.findMany({
+        where,
+        include: invoiceInclude,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
 
-    const summary = await prisma.invoice.groupBy({
-      by: ["status"],
-      _count: {
-        id: true,
-      },
-      _sum: {
-        totalAmount: true,
-      },
-    });
+      prisma.invoice.groupBy({
+        by: ["status"],
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalAmount: true,
+        },
+      }),
+    ]);
 
     return res.status(200).json({
       success: true,
       data: invoices,
-      summary,
+      summary: grouped,
     });
   } catch (error) {
     console.error("Get Invoices Error:", error);
@@ -257,10 +266,10 @@ const getInvoiceOptions = async (req, res) => {
     const options = [];
 
     for (const po of purchaseOrders) {
-      const items = [];
+      const availableItems = [];
 
       for (const poItem of po.items) {
-        const receiptAggregate = await prisma.goodsReceiptItem.aggregate({
+        const received = await prisma.goodsReceiptItem.aggregate({
           where: {
             purchaseOrderItemId: poItem.id,
             goodsReceipt: {
@@ -274,9 +283,7 @@ const getInvoiceOptions = async (req, res) => {
           },
         });
 
-        const receivedQuantity = receiptAggregate._sum.quantityReceived || 0;
-
-        const invoiceAggregate = await prisma.invoiceItem.aggregate({
+        const invoiced = await prisma.invoiceItem.aggregate({
           where: {
             purchaseOrderItemId: poItem.id,
             invoice: {
@@ -293,7 +300,8 @@ const getInvoiceOptions = async (req, res) => {
           },
         });
 
-        const invoicedQuantity = invoiceAggregate._sum.quantity || 0;
+        const receivedQuantity = received._sum.quantityReceived || 0;
+        const invoicedQuantity = invoiced._sum.quantity || 0;
 
         const remainingQuantity = Math.max(
           0,
@@ -301,7 +309,7 @@ const getInvoiceOptions = async (req, res) => {
         );
 
         if (remainingQuantity > 0) {
-          items.push({
+          availableItems.push({
             ...poItem,
             receivedQuantity,
             invoicedQuantity,
@@ -310,10 +318,10 @@ const getInvoiceOptions = async (req, res) => {
         }
       }
 
-      if (items.length > 0) {
+      if (availableItems.length > 0) {
         options.push({
           ...po,
-          items,
+          items: availableItems,
         });
       }
     }
@@ -327,7 +335,7 @@ const getInvoiceOptions = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Gagal mengambil pilihan Purchase Order untuk Invoice.",
+      message: "Gagal mengambil pilihan Purchase Order.",
     });
   }
 };
@@ -401,7 +409,7 @@ const createInvoice = async (req, res) => {
     const taxAmount = Number(tax);
 
     if (!Number.isFinite(taxAmount) || taxAmount < 0) {
-      throw createError("Pajak tidak boleh bernilai negatif.");
+      throw createError("Nilai pajak tidak valid.");
     }
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -418,7 +426,7 @@ const createInvoice = async (req, res) => {
       }
 
       if (!Number.isInteger(quantity) || quantity <= 0) {
-        throw createError("Jumlah Invoice harus lebih dari 0.");
+        throw createError("Jumlah barang harus lebih dari 0.");
       }
 
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
@@ -432,40 +440,36 @@ const createInvoice = async (req, res) => {
       };
     });
 
-    const itemIds = validatedItems.map((item) => item.purchaseOrderItemId);
+    const ids = validatedItems.map((item) => item.purchaseOrderItemId);
 
-    if (new Set(itemIds).size !== itemIds.length) {
+    if (new Set(ids).size !== ids.length) {
       throw createError("Barang yang sama tidak boleh dimasukkan dua kali.");
     }
 
     const result = await prisma.$transaction(
       async (tx) => {
-        // 1. VALIDATE PURCHASE ORDER
-        const purchaseOrder = await tx.purchaseOrder.findUnique({
-          where: {
-            id: poId,
-          },
+        const po = await tx.purchaseOrder.findUnique({
+          where: { id: poId },
           include: {
             items: true,
           },
         });
 
-        if (!purchaseOrder) {
+        if (!po) {
           throw createError("Purchase Order tidak ditemukan.", 404);
         }
 
-        if (purchaseOrder.status !== "COMPLETED") {
+        if (po.status !== "COMPLETED") {
           throw createError(
-            "Invoice hanya dapat dibuat untuk Purchase Order yang sudah selesai diterima.",
+            "Invoice hanya dapat dibuat untuk Purchase Order berstatus COMPLETED.",
           );
         }
 
-        // 2. VALIDATE EACH INVOICE ITEM
         const preparedItems = [];
 
         for (const item of validatedItems) {
-          const poItem = purchaseOrder.items.find(
-            (po) => po.id === item.purchaseOrderItemId,
+          const poItem = po.items.find(
+            (entry) => entry.id === item.purchaseOrderItemId,
           );
 
           if (!poItem) {
@@ -474,7 +478,7 @@ const createInvoice = async (req, res) => {
             );
           }
 
-          const receiptAggregate = await tx.goodsReceiptItem.aggregate({
+          const received = await tx.goodsReceiptItem.aggregate({
             where: {
               purchaseOrderItemId: poItem.id,
               goodsReceipt: {
@@ -488,9 +492,7 @@ const createInvoice = async (req, res) => {
             },
           });
 
-          const receivedQuantity = receiptAggregate._sum.quantityReceived || 0;
-
-          const invoiceAggregate = await tx.invoiceItem.aggregate({
+          const invoiced = await tx.invoiceItem.aggregate({
             where: {
               purchaseOrderItemId: poItem.id,
               invoice: {
@@ -507,7 +509,8 @@ const createInvoice = async (req, res) => {
             },
           });
 
-          const invoicedQuantity = invoiceAggregate._sum.quantity || 0;
+          const receivedQuantity = received._sum.quantityReceived || 0;
+          const invoicedQuantity = invoiced._sum.quantity || 0;
 
           const remainingQuantity = Math.max(
             0,
@@ -516,11 +519,18 @@ const createInvoice = async (req, res) => {
 
           if (item.quantity > remainingQuantity) {
             throw createError(
-              `Jumlah invoice ${poItem.itemName} melebihi jumlah yang belum ditagihkan. Sisa: ${remainingQuantity}.`,
+              `Jumlah invoice ${poItem.itemName} melebihi sisa barang yang dapat ditagihkan. Sisa: ${remainingQuantity}.`,
             );
           }
 
-          const totalPrice = roundMoney(item.quantity * item.unitPrice);
+          if (
+            roundMoney(item.unitPrice) !==
+            roundMoney(toNumber(poItem.unitPrice))
+          ) {
+            throw createError(
+              `Harga ${poItem.itemName} tidak sesuai dengan Purchase Order.`,
+            );
+          }
 
           preparedItems.push({
             purchaseOrderItemId: poItem.id,
@@ -528,39 +538,30 @@ const createInvoice = async (req, res) => {
             quantity: item.quantity,
             unit: poItem.unit,
             unitPrice: item.unitPrice,
-            totalPrice,
+            totalPrice: roundMoney(item.quantity * item.unitPrice),
           });
         }
 
-        // 3. CALCULATE TOTAL
         const subtotal = roundMoney(
-          preparedItems.reduce((total, item) => total + item.totalPrice, 0),
+          preparedItems.reduce((sum, item) => sum + item.totalPrice, 0),
         );
 
         const totalAmount = roundMoney(subtotal + taxAmount);
 
-        // 4. CREATE INVOICE
         return tx.invoice.create({
           data: {
             invoiceNumber: getInvoiceNumber(),
             vendorInvoiceNumber: vendorInvoiceNumber?.trim() || null,
-
-            vendorId: purchaseOrder.vendorId,
+            vendorId: po.vendorId,
             purchaseOrderId: poId,
-
             invoiceDate: new Date(invoiceDate),
             dueDate: dueDate ? new Date(dueDate) : null,
-
             status: "PENDING",
-
             subtotal,
             tax: taxAmount,
             totalAmount,
-
             notes: notes?.trim() || null,
-
             createdById: userId,
-
             items: {
               create: preparedItems,
             },
@@ -590,7 +591,7 @@ const createInvoice = async (req, res) => {
 };
 
 // =====================================================
-// GET THREE-WAY MATCHING
+// THREE-WAY MATCHING
 // GET /api/invoices/:id/matching
 // =====================================================
 const getInvoiceMatching = async (req, res) => {
@@ -608,7 +609,7 @@ const getInvoiceMatching = async (req, res) => {
       data: matching,
     });
   } catch (error) {
-    console.error("Get Invoice Matching Error:", error);
+    console.error("Invoice Matching Error:", error);
 
     return res.status(error.statusCode || 500).json({
       success: false,
@@ -640,16 +641,14 @@ const verifyInvoice = async (req, res) => {
       }
 
       if (invoice.status !== "PENDING") {
-        throw createError(
-          "Hanya Invoice berstatus PENDING yang dapat diverifikasi.",
-        );
+        throw createError("Hanya Invoice PENDING yang dapat diverifikasi.");
       }
 
       const matching = await calculateInvoiceMatching(tx, id);
 
       if (!matching.allMatched) {
         throw createError(
-          "Invoice belum lolos Three-Way Matching. Periksa jumlah dan harga barang.",
+          "Invoice gagal Three-Way Matching. Periksa jumlah dan harga barang.",
         );
       }
 
@@ -696,25 +695,27 @@ const rejectInvoice = async (req, res) => {
       throw createError("Alasan penolakan wajib diisi.");
     }
 
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findUnique({
+        where: { id },
+      });
 
-    if (!invoice) {
-      throw createError("Invoice tidak ditemukan.", 404);
-    }
+      if (!invoice) {
+        throw createError("Invoice tidak ditemukan.", 404);
+      }
 
-    if (!["DRAFT", "PENDING"].includes(invoice.status)) {
-      throw createError("Invoice dengan status ini tidak dapat ditolak.");
-    }
+      if (!["DRAFT", "PENDING"].includes(invoice.status)) {
+        throw createError("Invoice ini tidak dapat ditolak.");
+      }
 
-    const result = await prisma.invoice.update({
-      where: { id },
-      data: {
-        status: "REJECTED",
-        rejectionReason: rejectionReason.trim(),
-      },
-      include: invoiceInclude,
+      return tx.invoice.update({
+        where: { id },
+        data: {
+          status: "REJECTED",
+          rejectionReason: rejectionReason.trim(),
+        },
+        include: invoiceInclude,
+      });
     });
 
     return res.status(200).json({
@@ -744,25 +745,27 @@ const payInvoice = async (req, res) => {
       throw createError("ID Invoice tidak valid.");
     }
 
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const invoice = await tx.invoice.findUnique({
+        where: { id },
+      });
 
-    if (!invoice) {
-      throw createError("Invoice tidak ditemukan.", 404);
-    }
+      if (!invoice) {
+        throw createError("Invoice tidak ditemukan.", 404);
+      }
 
-    if (invoice.status !== "VERIFIED") {
-      throw createError("Invoice harus diverifikasi sebelum dapat dibayar.");
-    }
+      if (invoice.status !== "VERIFIED") {
+        throw createError("Invoice harus berstatus VERIFIED sebelum dibayar.");
+      }
 
-    const result = await prisma.invoice.update({
-      where: { id },
-      data: {
-        status: "PAID",
-        paidAt: new Date(),
-      },
-      include: invoiceInclude,
+      return tx.invoice.update({
+        where: { id },
+        data: {
+          status: "PAID",
+          paidAt: new Date(),
+        },
+        include: invoiceInclude,
+      });
     });
 
     return res.status(200).json({
