@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import VendorManagement from "./pages/VendorManagement";
 
 interface User {
   id: number;
@@ -15,45 +14,42 @@ interface LoginData {
   user: User;
 }
 
-// Mengatur autentikasi pengguna dan halaman utama aplikasi.
+// Mengatur autentikasi pengguna dan navigasi aplikasi.
 function App() {
-  // Memulihkan sesi pengguna yang tersimpan di browser.
+  // Memulihkan sesi pengguna dari browser.
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem("user");
+
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
+  // Menentukan halaman yang sedang dibuka.
   const [activePage, setActivePage] = useState("dashboard");
 
-  // Menyimpan token dan profil setelah login berhasil.
+  // Menyimpan sesi setelah login berhasil.
   const handleLoginSuccess = (data: LoginData) => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
+
     setUser(data.user);
+    setActivePage("dashboard");
   };
 
-  // Menghapus sesi pengguna dan kembali ke halaman dashboard.
+  // Menghapus sesi pengguna.
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     setUser(null);
     setActivePage("dashboard");
   };
 
+  // Menampilkan halaman login jika belum masuk.
   if (!user) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  if (activePage === "vendors") {
-    return (
-      <VendorManagement
-        user={user}
-        onLogout={handleLogout}
-        onNavigate={setActivePage}
-      />
-    );
-  }
-
+  // Semua halaman setelah login dikelola melalui Dashboard.
   return (
     <Dashboard
       user={user}

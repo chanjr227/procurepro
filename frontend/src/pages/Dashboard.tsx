@@ -16,6 +16,7 @@ import StockTransactions from "./StockTransactions";
 import StockOpname from "./StockOpname";
 import Invoices from "./Invoices";
 import Reports from "./Reports";
+import UserManagement from "./UserManagement";
 
 const stats = [
   {
@@ -246,11 +247,11 @@ export default function Dashboard({
       "inventory-stock": "Inventory Stock",
       "stock-transactions": "Stock Transactions",
       "stock-opname": "Stock Opname",
+      "user-management": "User Management",
     };
 
     setActiveMenu(pageMenuMap[activePage] || "Dashboard");
   }, [activePage]);
-  // Membuka halaman sesuai menu yang dipilih pengguna.
   // Membuka halaman sesuai menu yang dipilih pengguna.
   const handleMenuClick = (label: string) => {
     const pageMap: Record<string, string> = {
@@ -267,6 +268,7 @@ export default function Dashboard({
       "Inventory Stock": "inventory-stock",
       "Stock Transactions": "stock-transactions",
       "Stock Opname": "stock-opname",
+      "User Management": "user-management",
     };
 
     const page = pageMap[label];
@@ -542,7 +544,7 @@ export default function Dashboard({
               </div>
               <div>
                 <strong>{user.name}</strong>
-                <span>Administrator</span>
+                <span>{user.role || "User"}</span>
               </div>
               <span>⌄</span>
             </div>
@@ -572,6 +574,8 @@ export default function Dashboard({
             <InventoryStock />
           ) : activePage === "stock-transactions" ? (
             <StockTransactions />
+          ) : activePage === "user-management" ? (
+            <UserManagement />
           ) : activePage === "reports" ? (
             <Reports />
           ) : activePage === "warehouses" ? (

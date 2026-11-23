@@ -17,6 +17,7 @@ const stockOpnameRoutes = require("./src/routes/stockOpnameRoutes");
 const lowStockRoutes = require("./src/routes/lowStockRoutes");
 const invoiceRoutes = require("./src/routes/invoiceRoutes");
 const reportRoutes = require("./src/routes/reportRoutes");
+const userRoutes = require("./src/routes/userRoutes");
 
 // Menyiapkan aplikasi Express dan port layanan backend.
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/stock-opnames", stockOpnameRoutes);
 app.use("/api/low-stock-alerts", lowStockRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/users", userRoutes);
 
 // Menyediakan endpoint informasi dasar untuk memeriksa server.
 app.get("/", (req, res) => {
