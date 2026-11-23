@@ -352,6 +352,9 @@ const deleteRequisition = async (req, res) => {
 
 // POST: Mengajukan requisition untuk persetujuan
 // Mengirim requisition untuk proses persetujuan.
+
+// POST: Mengajukan requisition untuk persetujuan
+// Mengubah status menjadi PENDING dan mengirim notifikasi kepada Procurement Manager.
 const submitRequisition = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -365,6 +368,14 @@ const submitRequisition = async (req, res) => {
 
     const existing = await prisma.requisition.findUnique({
       where: { id },
+      include: {
+        requestedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!existing) {
@@ -388,20 +399,62 @@ const submitRequisition = async (req, res) => {
       });
     }
 
-    const updated = await prisma.requisition.update({
-      where: { id },
-      data: { status: "PENDING" },
-      include: { items: true },
+    // Mencari semua Procurement Manager yang aktif.
+    const managers = await prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: {
+          name: "PROCUREMENT_MANAGER",
+        },
+      },
+      select: {
+        id: true,
+      },
     });
 
-    res.json({
+    // Memperbarui requisition dan membuat notifikasi dalam satu transaksi.
+    const updated = await prisma.$transaction(async (tx) => {
+      const requisition = await tx.requisition.update({
+        where: { id },
+        data: {
+          status: "PENDING",
+        },
+        include: {
+          items: true,
+          requestedBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (managers.length > 0) {
+        await tx.notification.createMany({
+          data: managers.map((manager) => ({
+            userId: manager.id,
+            title: "Requisition Menunggu Approval",
+            message: `${requisition.requestedBy.name} mengajukan requisition ${requisition.requestNumber} - ${requisition.title} dan menunggu persetujuan.`,
+            type: "REQUISITION_PENDING",
+            referenceId: requisition.id,
+            referenceType: "REQUISITION",
+          })),
+        });
+      }
+
+      return requisition;
+    });
+
+    return res.json({
       success: true,
       message: "Requisition berhasil diajukan untuk persetujuan.",
       data: updated,
     });
   } catch (error) {
     console.error("Submit requisition error:", error);
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: "Gagal mengajukan requisition.",
     });

@@ -44,6 +44,8 @@ model User {
 
   @@index([roleId])
   @@map("users")
+
+  notifications Notification[]
 }
 
 enum VendorStatus {
@@ -508,4 +510,23 @@ model InvoiceItem {
   @@unique([invoiceId, purchaseOrderItemId])
   @@index([purchaseOrderItemId])
   @@map("invoice_items")
+}
+
+
+model Notification {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  title         String   @db.VarChar(150)
+  message       String   @db.Text
+  type          String   @db.VarChar(50)
+  referenceId   Int?
+  referenceType String?  @db.VarChar(50)
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }
