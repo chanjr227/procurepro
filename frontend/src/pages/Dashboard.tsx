@@ -15,6 +15,7 @@ import InventoryStock from "./InventoryStock";
 import StockTransactions from "./StockTransactions";
 import StockOpname from "./StockOpname";
 import Invoices from "./Invoices";
+import Reports from "./Reports";
 
 const stats = [
   {
@@ -239,6 +240,7 @@ export default function Dashboard({
       "purchase-orders": "Purchase Orders",
       "goods-receipts": "Goods Receipt",
       invoices: "Invoices",
+      reports: "Reports",
       "inventory-items": "Inventory Items",
       warehouses: "Warehouses",
       "inventory-stock": "Inventory Stock",
@@ -259,6 +261,7 @@ export default function Dashboard({
       "Purchase Orders": "purchase-orders",
       "Goods Receipt": "goods-receipts",
       Invoices: "invoices",
+      Reports: "reports",
       "Inventory Items": "inventory-items",
       Warehouses: "warehouses",
       "Inventory Stock": "inventory-stock",
@@ -569,6 +572,8 @@ export default function Dashboard({
             <InventoryStock />
           ) : activePage === "stock-transactions" ? (
             <StockTransactions />
+          ) : activePage === "reports" ? (
+            <Reports />
           ) : activePage === "warehouses" ? (
             <WarehouseManagement />
           ) : activePage === "stock-opname" ? (
