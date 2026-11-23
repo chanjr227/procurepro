@@ -176,6 +176,18 @@ interface LowStockSummary {
   lowStock: number;
 }
 
+interface AppNotification {
+  id: number;
+  userId: number;
+  title: string;
+  message: string;
+  type: string;
+  referenceId: number | null;
+  referenceType: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 // Menampilkan dashboard dan mengatur navigasi serta notifikasi pengguna.
 export default function Dashboard({
   user,
@@ -196,17 +208,21 @@ export default function Dashboard({
     });
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [appNotifications, setAppNotifications] = useState<AppNotification[]>(
+    [],
+  );
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Mengambil notifikasi stok saat halaman dibuka dan menjadwalkan pembaruan.
+  // Mengambil notifikasi stok dan notifikasi sistem.
   useEffect(() => {
-    // Mengambil daftar peringatan stok dan ringkasannya dari backend.
     const fetchLowStockAlerts = async () => {
       try {
         const response = await api.get("/low-stock-alerts");
-
         const result = response.data.data;
 
         setAlerts(result.alerts || []);
+
         setNotificationSummary(
           result.summary || {
             totalAlerts: 0,
@@ -219,14 +235,27 @@ export default function Dashboard({
       }
     };
 
-    fetchLowStockAlerts();
+    const fetchAppNotifications = async () => {
+      try {
+        const response = await api.get("/notifications");
+        const result = response.data.data;
 
-    const interval = setInterval(() => {
-      // Memperbarui notifikasi stok secara berkala.
+        setAppNotifications(result.notifications || []);
+        setUnreadCount(result.unreadCount || 0);
+      } catch (error) {
+        console.error("Gagal mengambil notifikasi sistem:", error);
+      }
+    };
+
+    const fetchAllNotifications = () => {
       fetchLowStockAlerts();
-    }, 30000);
+      fetchAppNotifications();
+    };
 
-    // Membersihkan interval saat komponen dashboard dilepas.
+    fetchAllNotifications();
+
+    const interval = setInterval(fetchAllNotifications, 30000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -276,6 +305,31 @@ export default function Dashboard({
     if (page) {
       setActiveMenu(label);
       onNavigate(page);
+    }
+  };
+
+  // Menandai notifikasi sebagai sudah dibaca dan membuka halaman terkait.
+  const handleNotificationClick = async (notification: AppNotification) => {
+    try {
+      if (!notification.isRead) {
+        await api.patch(`/notifications/${notification.id}/read`);
+
+        setAppNotifications((previous) =>
+          previous.map((item) =>
+            item.id === notification.id ? { ...item, isRead: true } : item,
+          ),
+        );
+
+        setUnreadCount((previous) => Math.max(0, previous - 1));
+      }
+    } catch (error) {
+      console.error("Gagal menandai notifikasi:", error);
+    }
+
+    setShowNotifications(false);
+
+    if (notification.referenceType === "REQUISITION") {
+      onNavigate("approvals");
     }
   };
 
@@ -400,11 +454,11 @@ export default function Dashboard({
               >
                 <span className="notification-bell">♧</span>
 
-                {notificationSummary.totalAlerts > 0 && (
+                {notificationSummary.totalAlerts + unreadCount > 0 && (
                   <span className="notification-badge">
-                    {notificationSummary.totalAlerts > 99
+                    {notificationSummary.totalAlerts + unreadCount > 99
                       ? "99+"
-                      : notificationSummary.totalAlerts}
+                      : notificationSummary.totalAlerts + unreadCount}
                   </span>
                 )}
               </button>
@@ -414,9 +468,10 @@ export default function Dashboard({
                   <div className="notification-header">
                     <div>
                       <h3>Notifikasi Stok</h3>
+                      <h3>Notifikasi</h3>
                       <p>
-                        {notificationSummary.totalAlerts} notifikasi perlu
-                        diperhatikan
+                        {notificationSummary.totalAlerts + unreadCount}{" "}
+                        notifikasi perlu diperhatikan
                       </p>
                     </div>
 
@@ -445,7 +500,39 @@ export default function Dashboard({
                   </div>
 
                   <div className="notification-list">
-                    {alerts.length === 0 ? (
+                    {appNotifications.map((notification) => (
+                      <button
+                        type="button"
+                        className={`notification-item app-notification-item ${
+                          notification.isRead ? "is-read" : "is-unread"
+                        }`}
+                        key={`app-${notification.id}`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div className="notification-status low-stock">✓</div>
+
+                        <div className="notification-item-content">
+                          <div className="notification-item-top">
+                            <strong>{notification.title}</strong>
+
+                            {!notification.isRead && (
+                              <span className="notification-label low-stock">
+                                Baru
+                              </span>
+                            )}
+                          </div>
+
+                          <p>{notification.message}</p>
+
+                          <small>
+                            {new Date(notification.createdAt).toLocaleString(
+                              "id-ID",
+                            )}
+                          </small>
+                        </div>
+                      </button>
+                    ))}
+                    {alerts.length === 0 && appNotifications.length === 0 ? (
                       <div className="notification-empty">
                         <span>✓</span>
                         <strong>Tidak ada peringatan stok</strong>

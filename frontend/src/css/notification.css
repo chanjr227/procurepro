@@ -267,3 +267,21 @@
     width: calc(100vw - 24px);
   }
 }
+
+/* Notifikasi sistem seperti requisition dan approval */
+.app-notification-item {
+  border-left: 3px solid #2563eb;
+}
+
+.app-notification-item.is-unread {
+  background: #eff6ff;
+}
+
+.app-notification-item.is-read {
+  opacity: 0.75;
+}
+
+.app-notification-item .notification-item-content p {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
