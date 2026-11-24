@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-
 import api from "../services/api";
 
 import "../css/dashboard.css";
 import "../css/notification.css";
+
 import VendorManagement from "./VendorManagement";
 import Requisitions from "./Requisitions";
 import ApprovalManagement from "./ApprovalManagement";
@@ -18,97 +18,102 @@ import Invoices from "./Invoices";
 import Reports from "./Reports";
 import UserManagement from "./UserManagement";
 
-const stats = [
-  {
-    label: "Total Procurement",
-    value: "Rp 2,45 M",
-    change: "+12.8%",
-    icon: "◈",
-  },
-  {
-    label: "Active Vendors",
-    value: "128",
-    change: "+8.2%",
-    icon: "♙",
-  },
-  {
-    label: "Pending Approvals",
-    value: "24",
-    change: "Perlu tindakan",
-    icon: "◷",
-  },
-  {
-    label: "Purchase Orders",
-    value: "86",
-    change: "+5.4%",
-    icon: "▤",
-  },
-];
+interface DashboardProps {
+  user: {
+    name: string;
+    email: string;
+    role: string;
+  };
+  onLogout: () => void;
+  onNavigate: (page: string) => void;
+  activePage: string;
+}
 
-const orders = [
-  {
-    id: "PO-2026-0086",
-    vendor: "PT Sinar Teknologi",
-    date: "09 Nov 2026",
-    amount: "Rp 45.500.000",
-    status: "Approved",
-  },
-  {
-    id: "PO-2026-0085",
-    vendor: "CV Mitra Supplies",
-    date: "08 Nov 2026",
-    amount: "Rp 18.750.000",
-    status: "Pending",
-  },
-  {
-    id: "PO-2026-0084",
-    vendor: "PT Global Industri",
-    date: "07 Nov 2026",
-    amount: "Rp 72.000.000",
-    status: "Processing",
-  },
-  {
-    id: "PO-2026-0083",
-    vendor: "PT Digital Nusantara",
-    date: "06 Nov 2026",
-    amount: "Rp 12.300.000",
-    status: "Approved",
-  },
-  {
-    id: "PO-2026-0082",
-    vendor: "CV Berkah Jaya",
-    date: "05 Nov 2026",
-    amount: "Rp 8.900.000",
-    status: "Rejected",
-  },
-];
+interface LowStockAlert {
+  id: string;
+  itemName: string;
+  unit: string;
+  currentStock: number;
+  minimumStock: number;
+  warehouseName: string;
+  severity: "OUT_OF_STOCK" | "LOW_STOCK";
+  message: string;
+}
 
-const activities = [
-  {
-    title: "Purchase Order approved",
-    detail: "PO-2026-0086 · PT Sinar Teknologi",
-    time: "10 menit lalu",
-    icon: "✓",
-  },
-  {
-    title: "New vendor registered",
-    detail: "PT Karya Digital Indonesia",
-    time: "35 menit lalu",
-    icon: "+",
-  },
-  {
-    title: "Purchase request submitted",
-    detail: "PR-2026-0124 · Divisi IT",
-    time: "1 jam lalu",
-    icon: "↗",
-  },
-  {
-    title: "Invoice received",
-    detail: "INV-2026-044 · CV Mitra Supplies",
-    time: "3 jam lalu",
-    icon: "▤",
-  },
-];
+interface AppNotification {
+  id: number;
+  title: string;
+  message: string;
+  referenceType: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+interface DashboardActivity {
+  id: string;
+  type: string;
+  title: string;
+  detail: string;
+  status?: string;
+  actor?: string;
+  amount?: number;
+  quantity?: number;
+  createdAt: string;
+}
+
+interface DashboardData {
+  year: number;
+  statistics: {
+    totalProcurement: number;
+    activeVendors: number;
+    pendingApprovals: number;
+    totalPurchaseOrders: number;
+  };
+  requisitions: {
+    total: number;
+    draft: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    cancelled: number;
+  };
+  purchaseOrders: {
+    total: number;
+    draft: number;
+    sent: number;
+    completed: number;
+    cancelled: number;
+  };
+  procurementChart: {
+    month: number;
+    amount: number;
+  }[];
+  inventory: {
+    totalItems: number;
+    totalStock: number;
+    lowStockItems: number;
+    totalWarehouses: number;
+  };
+  invoices: {
+    total: number;
+    draft: number;
+    pending: number;
+    verified: number;
+    rejected: number;
+    paid: number;
+    unpaid: number;
+    unpaidAmount: number;
+  };
+  recentPurchaseOrders: {
+    id: number;
+    poNumber: string;
+    vendor: string;
+    date: string;
+    amount: number;
+    status: string;
+  }[];
+  recentActivities: DashboardActivity[];
+}
 
 const menuGroups = [
   {
@@ -125,7 +130,7 @@ const menuGroups = [
   {
     title: "MANAGEMENT",
     items: [
-      { label: "Approvals", icon: "✓", count: "24" },
+      { label: "Approvals", icon: "✓" },
       { label: "Reports", icon: "▥" },
       { label: "User Management", icon: "♧" },
     ],
@@ -142,70 +147,126 @@ const menuGroups = [
   },
 ];
 
-interface DashboardProps {
-  user: {
-    name: string;
-    email: string;
-    role: string;
-  };
-  onLogout: () => void;
-  onNavigate: (page: string) => void;
-  activePage: string;
-}
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+];
 
-interface LowStockAlert {
-  id: string;
-  inventoryItemId: number;
-  warehouseId: number;
-  itemCode: string;
-  itemName: string;
-  category: string;
-  unit: string;
-  currentStock: number;
-  minimumStock: number;
-  warehouseCode: string;
-  warehouseName: string;
-  severity: "OUT_OF_STOCK" | "LOW_STOCK";
-  message: string;
-  updatedAt: string;
-}
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount || 0);
 
-interface LowStockSummary {
-  totalAlerts: number;
-  outOfStock: number;
-  lowStock: number;
-}
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("id-ID").format(value || 0);
 
-interface AppNotification {
-  id: number;
-  userId: number;
-  title: string;
-  message: string;
-  type: string;
-  referenceId: number | null;
-  referenceType: string | null;
-  isRead: boolean;
-  createdAt: string;
-}
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
-// Menampilkan dashboard dan mengatur navigasi serta notifikasi pengguna.
+const formatRelativeTime = (date: string) => {
+  const diff = Math.max(0, Date.now() - new Date(date).getTime());
+  const minutes = Math.floor(diff / 60000);
+
+  if (minutes < 1) return "Baru saja";
+  if (minutes < 60) return `${minutes} menit lalu`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} hari lalu`;
+
+  return formatDate(date);
+};
+
+const emptyDashboardData = (year: number): DashboardData => ({
+  year,
+  statistics: {
+    totalProcurement: 0,
+    activeVendors: 0,
+    pendingApprovals: 0,
+    totalPurchaseOrders: 0,
+  },
+  requisitions: {
+    total: 0,
+    draft: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    cancelled: 0,
+  },
+  purchaseOrders: {
+    total: 0,
+    draft: 0,
+    sent: 0,
+    completed: 0,
+    cancelled: 0,
+  },
+  procurementChart: monthNames.map((_, index) => ({
+    month: index + 1,
+    amount: 0,
+  })),
+  inventory: {
+    totalItems: 0,
+    totalStock: 0,
+    lowStockItems: 0,
+    totalWarehouses: 0,
+  },
+  invoices: {
+    total: 0,
+    draft: 0,
+    pending: 0,
+    verified: 0,
+    rejected: 0,
+    paid: 0,
+    unpaid: 0,
+    unpaidAmount: 0,
+  },
+  recentPurchaseOrders: [],
+  recentActivities: [],
+});
+
 export default function Dashboard({
   user,
   onLogout,
   onNavigate,
   activePage,
 }: DashboardProps) {
+  const currentYear = new Date().getFullYear();
+
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const [search, setSearch] = useState("");
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  const [dashboardData, setDashboardData] = useState<DashboardData>(
+    emptyDashboardData(currentYear),
+  );
+
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
 
   const [alerts, setAlerts] = useState<LowStockAlert[]>([]);
-
-  const [notificationSummary, setNotificationSummary] =
-    useState<LowStockSummary>({
-      totalAlerts: 0,
-      outOfStock: 0,
-      lowStock: 0,
-    });
+  const [lowStockSummary, setLowStockSummary] = useState({
+    totalAlerts: 0,
+    outOfStock: 0,
+    lowStock: 0,
+  });
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [appNotifications, setAppNotifications] = useState<AppNotification[]>(
@@ -213,54 +274,87 @@ export default function Dashboard({
   );
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Mengambil notifikasi stok saat halaman dibuka dan menjadwalkan pembaruan.
-  // Mengambil notifikasi stok dan notifikasi sistem.
+  // Mengambil ringkasan dashboard sesuai tahun yang dipilih.
   useEffect(() => {
-    const fetchLowStockAlerts = async () => {
+    let isMounted = true;
+
+    const fetchDashboard = async () => {
       try {
-        const response = await api.get("/low-stock-alerts");
-        const result = response.data.data;
+        setDashboardLoading(true);
+        setDashboardError("");
 
-        setAlerts(result.alerts || []);
+        const response = await api.get(
+          `/dashboard/summary?year=${selectedYear}`,
+        );
 
-        setNotificationSummary(
-          result.summary || {
+        if (isMounted) {
+          setDashboardData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data dashboard:", error);
+
+        if (isMounted) {
+          setDashboardError(
+            "Data dashboard gagal dimuat. Periksa koneksi backend.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setDashboardLoading(false);
+        }
+      }
+    };
+
+    fetchDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedYear]);
+
+  // Mengambil notifikasi sistem dan peringatan stok.
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchNotifications = async () => {
+      try {
+        const [stockResponse, notificationResponse] = await Promise.all([
+          api.get("/low-stock-alerts"),
+          api.get("/notifications"),
+        ]);
+
+        if (!isMounted) return;
+
+        const stockData = stockResponse.data.data;
+        const notificationData = notificationResponse.data.data;
+
+        setAlerts(stockData.alerts || []);
+        setLowStockSummary(
+          stockData.summary || {
             totalAlerts: 0,
             outOfStock: 0,
             lowStock: 0,
           },
         );
+
+        setAppNotifications(notificationData.notifications || []);
+        setUnreadCount(notificationData.unreadCount || 0);
       } catch (error) {
-        console.error("Gagal mengambil notifikasi stok:", error);
+        console.error("Gagal mengambil notifikasi:", error);
       }
     };
 
-    const fetchAppNotifications = async () => {
-      try {
-        const response = await api.get("/notifications");
-        const result = response.data.data;
+    fetchNotifications();
 
-        setAppNotifications(result.notifications || []);
-        setUnreadCount(result.unreadCount || 0);
-      } catch (error) {
-        console.error("Gagal mengambil notifikasi sistem:", error);
-      }
+    const interval = setInterval(fetchNotifications, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
     };
-
-    const fetchAllNotifications = () => {
-      fetchLowStockAlerts();
-      fetchAppNotifications();
-    };
-
-    fetchAllNotifications();
-
-    const interval = setInterval(fetchAllNotifications, 30000);
-
-    return () => clearInterval(interval);
   }, []);
 
-  // Menyamakan menu aktif dengan halaman yang sedang dibuka.
-  // Menyamakan menu aktif dengan halaman yang sedang dibuka.
+  // Menyesuaikan nama menu dengan halaman aktif.
   useEffect(() => {
     const pageMenuMap: Record<string, string> = {
       dashboard: "Dashboard",
@@ -281,7 +375,7 @@ export default function Dashboard({
 
     setActiveMenu(pageMenuMap[activePage] || "Dashboard");
   }, [activePage]);
-  // Membuka halaman sesuai menu yang dipilih pengguna.
+
   const handleMenuClick = (label: string) => {
     const pageMap: Record<string, string> = {
       Dashboard: "dashboard",
@@ -300,15 +394,12 @@ export default function Dashboard({
       "User Management": "user-management",
     };
 
-    const page = pageMap[label];
-
-    if (page) {
+    if (pageMap[label]) {
       setActiveMenu(label);
-      onNavigate(page);
+      onNavigate(pageMap[label]);
     }
   };
 
-  // Menandai notifikasi sebagai sudah dibaca dan membuka halaman terkait.
   const handleNotificationClick = async (notification: AppNotification) => {
     try {
       if (!notification.isRead) {
@@ -333,6 +424,64 @@ export default function Dashboard({
     }
   };
 
+  const data = dashboardData;
+  const maxChartValue = Math.max(
+    ...data.procurementChart.map((item) => item.amount),
+    1,
+  );
+
+  const filteredOrders = data.recentPurchaseOrders.filter((order) =>
+    `${order.poNumber} ${order.vendor} ${order.status}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
+
+  const notificationCount = lowStockSummary.totalAlerts + unreadCount;
+
+  const statusItems = [
+    {
+      label: "Approved",
+      value: data.requisitions.approved,
+      className: "approved",
+    },
+    {
+      label: "Pending",
+      value: data.requisitions.pending,
+      className: "pending",
+    },
+    {
+      label: "Rejected",
+      value: data.requisitions.rejected,
+      className: "rejected",
+    },
+    { label: "Draft", value: data.requisitions.draft, className: "draft" },
+    {
+      label: "Cancelled",
+      value: data.requisitions.cancelled,
+      className: "cancelled",
+    },
+  ];
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "REQUISITION":
+        return "▤";
+      case "PURCHASE_ORDER":
+        return "▧";
+      case "GOODS_RECEIPT":
+        return "📦";
+      case "INVOICE":
+        return "▥";
+      case "STOCK":
+        return "↔";
+      default:
+        return "•";
+    }
+  };
+
+  const getStatusClass = (status: string) =>
+    status.toLowerCase().replaceAll("_", "-");
+
   return (
     <div className="dashboard-layout">
       <aside className="dashboard-sidebar">
@@ -354,53 +503,36 @@ export default function Dashboard({
         </div>
 
         <nav className="sidebar-navigation">
-          {menuGroups.map(
-            // Menampilkan setiap kelompok menu pada sidebar.
-            (group) => (
-              <div className="menu-group" key={group.title}>
-                <p className="menu-heading">{group.title}</p>
+          {menuGroups.map((group) => (
+            <div className="menu-group" key={group.title}>
+              <p className="menu-heading">{group.title}</p>
 
-                {group.items.map(
-                  // Menampilkan item menu beserta status aktifnya.
-                  (item) => (
-                    <button
-                      key={item.label}
-                      className={`sidebar-link ${
-                        activeMenu === item.label ? "active" : ""
-                      }`}
-                      onClick={
-                        // Menangani pemilihan item menu.
-                        () => handleMenuClick(item.label)
-                      }
-                    >
-                      <span className="sidebar-icon">{item.icon}</span>
-                      <span>{item.label}</span>
+              {group.items.map((item) => (
+                <button
+                  key={item.label}
+                  className={`sidebar-link ${
+                    activeMenu === item.label ? "active" : ""
+                  }`}
+                  onClick={() => handleMenuClick(item.label)}
+                >
+                  <span className="sidebar-icon">{item.icon}</span>
+                  <span>{item.label}</span>
 
-                      {item.count && (
-                        <span className="menu-count">{item.count}</span>
-                      )}
-                    </button>
-                  ),
-                )}
-              </div>
-            ),
-          )}
+                  {item.label === "Approvals" &&
+                    data.statistics.pendingApprovals > 0 && (
+                      <span className="menu-count">
+                        {data.statistics.pendingApprovals > 99
+                          ? "99+"
+                          : data.statistics.pendingApprovals}
+                      </span>
+                    )}
+                </button>
+              ))}
+            </div>
+          ))}
         </nav>
 
         <div className="sidebar-bottom">
-          <button
-            className={`sidebar-link ${
-              activeMenu === "Settings" ? "active" : ""
-            }`}
-            onClick={
-              // Mengaktifkan menu pengaturan.
-              () => setActiveMenu("Settings")
-            }
-          >
-            <span className="sidebar-icon">⚙</span>
-            Settings
-          </button>
-
           <div className="sidebar-user">
             <div className="user-avatar">
               {user.name.charAt(0).toUpperCase()}
@@ -408,7 +540,7 @@ export default function Dashboard({
 
             <div className="sidebar-user-info">
               <strong>{user.name}</strong>
-              <span>{user.role || "Administrator"}</span>
+              <span>{user.role || "User"}</span>
             </div>
 
             <button className="logout-button" onClick={onLogout} title="Logout">
@@ -431,14 +563,10 @@ export default function Dashboard({
               <span>⌕</span>
               <input
                 type="search"
-                placeholder="Search anything..."
+                placeholder="Cari purchase order..."
                 value={search}
-                onChange={
-                  // Memperbarui kata kunci pencarian pesanan.
-                  (e) => setSearch(e.target.value)
-                }
+                onChange={(event) => setSearch(event.target.value)}
               />
-              <kbd>⌘ K</kbd>
             </label>
 
             <div className="notification-wrapper">
@@ -446,19 +574,14 @@ export default function Dashboard({
                 className="notification-button"
                 title="Notifications"
                 type="button"
-                onClick={
-                  // Membuka atau menutup panel notifikasi.
-                  () => setShowNotifications(!showNotifications)
-                }
+                onClick={() => setShowNotifications(!showNotifications)}
                 aria-expanded={showNotifications}
               >
                 <span className="notification-bell">♧</span>
 
-                {notificationSummary.totalAlerts + unreadCount > 0 && (
+                {notificationCount > 0 && (
                   <span className="notification-badge">
-                    {notificationSummary.totalAlerts + unreadCount > 99
-                      ? "99+"
-                      : notificationSummary.totalAlerts + unreadCount}
+                    {notificationCount > 99 ? "99+" : notificationCount}
                   </span>
                 )}
               </button>
@@ -468,19 +591,13 @@ export default function Dashboard({
                   <div className="notification-header">
                     <div>
                       <h3>Notifikasi</h3>
-                      <p>
-                        {notificationSummary.totalAlerts + unreadCount}{" "}
-                        notifikasi perlu diperhatikan
-                      </p>
+                      <p>{notificationCount} notifikasi perlu diperhatikan</p>
                     </div>
 
                     <button
                       type="button"
                       className="notification-close"
-                      onClick={
-                        // Menutup panel notifikasi.
-                        () => setShowNotifications(false)
-                      }
+                      onClick={() => setShowNotifications(false)}
                     >
                       ×
                     </button>
@@ -488,12 +605,11 @@ export default function Dashboard({
 
                   <div className="notification-summary">
                     <div>
-                      <strong>{notificationSummary.outOfStock}</strong>
+                      <strong>{lowStockSummary.outOfStock}</strong>
                       <span>Habis</span>
                     </div>
-
                     <div>
-                      <strong>{notificationSummary.lowStock}</strong>
+                      <strong>{lowStockSummary.lowStock}</strong>
                       <span>Stok Minimum</span>
                     </div>
                   </div>
@@ -505,24 +621,20 @@ export default function Dashboard({
                         className={`notification-item app-notification-item ${
                           notification.isRead ? "is-read" : "is-unread"
                         }`}
-                        key={`app-${notification.id}`}
+                        key={notification.id}
                         onClick={() => handleNotificationClick(notification)}
                       >
                         <div className="notification-status low-stock">✓</div>
-
                         <div className="notification-item-content">
                           <div className="notification-item-top">
                             <strong>{notification.title}</strong>
-
                             {!notification.isRead && (
                               <span className="notification-label low-stock">
                                 Baru
                               </span>
                             )}
                           </div>
-
                           <p>{notification.message}</p>
-
                           <small>
                             {new Date(notification.createdAt).toLocaleString(
                               "id-ID",
@@ -531,91 +643,57 @@ export default function Dashboard({
                         </div>
                       </button>
                     ))}
-                    {alerts.length === 0 && appNotifications.length === 0 ? (
+
+                    {alerts.map((alert) => (
+                      <button
+                        type="button"
+                        className="notification-item"
+                        key={alert.id}
+                        onClick={() => {
+                          setShowNotifications(false);
+                          onNavigate("inventory-stock");
+                        }}
+                      >
+                        <div
+                          className={`notification-status ${
+                            alert.severity === "OUT_OF_STOCK"
+                              ? "out-of-stock"
+                              : "low-stock"
+                          }`}
+                        >
+                          !
+                        </div>
+                        <div className="notification-item-content">
+                          <div className="notification-item-top">
+                            <strong>{alert.itemName}</strong>
+                            <span className="notification-label low-stock">
+                              {alert.severity === "OUT_OF_STOCK"
+                                ? "Habis"
+                                : "Stok Minimum"}
+                            </span>
+                          </div>
+                          <p>{alert.warehouseName}</p>
+                          <small>{alert.message}</small>
+                        </div>
+                      </button>
+                    ))}
+
+                    {alerts.length === 0 && appNotifications.length === 0 && (
                       <div className="notification-empty">
                         <span>✓</span>
-                        <strong>Tidak ada peringatan stok</strong>
-                        <p>Semua stok masih dalam kondisi aman.</p>
+                        <strong>Tidak ada notifikasi</strong>
+                        <p>Belum ada notifikasi yang perlu diperhatikan.</p>
                       </div>
-                    ) : (
-                      alerts.map(
-                        // Menampilkan detail untuk setiap peringatan stok.
-                        (alert) => (
-                          <button
-                            type="button"
-                            className="notification-item"
-                            key={alert.id}
-                            onClick={
-                              // Membuka halaman stok setelah notifikasi dipilih.
-                              () => {
-                                setShowNotifications(false);
-                                onNavigate("inventory-stock");
-                              }
-                            }
-                          >
-                            <div
-                              className={`notification-status ${
-                                alert.severity === "OUT_OF_STOCK"
-                                  ? "out-of-stock"
-                                  : "low-stock"
-                              }`}
-                            >
-                              !
-                            </div>
-
-                            <div className="notification-item-content">
-                              <div className="notification-item-top">
-                                <strong>{alert.itemName}</strong>
-
-                                <span
-                                  className={`notification-label ${
-                                    alert.severity === "OUT_OF_STOCK"
-                                      ? "out-of-stock"
-                                      : "low-stock"
-                                  }`}
-                                >
-                                  {alert.severity === "OUT_OF_STOCK"
-                                    ? "Habis"
-                                    : "Stok Minimum"}
-                                </span>
-                              </div>
-
-                              <p>{alert.warehouseName}</p>
-
-                              <div className="notification-stock-info">
-                                <span>
-                                  Stok:{" "}
-                                  <strong>
-                                    {alert.currentStock} {alert.unit}
-                                  </strong>
-                                </span>
-
-                                <span>
-                                  Minimum:{" "}
-                                  <strong>
-                                    {alert.minimumStock} {alert.unit}
-                                  </strong>
-                                </span>
-                              </div>
-
-                              <small>{alert.message}</small>
-                            </div>
-                          </button>
-                        ),
-                      )
                     )}
                   </div>
 
                   <div className="notification-footer">
                     <button
                       type="button"
-                      onClick={
-                        // Membuka halaman stok dari tautan pada panel notifikasi.
-                        () => {
-                          setShowNotifications(false);
-                          onNavigate("inventory-stock");
-                        }
-                      }
+                      onClick={() => {
+                        setShowNotifications(false);
+                        onNavigate("inventory-stock");
+                      }}
                     >
                       Lihat Inventory Stock →
                     </button>
@@ -632,7 +710,6 @@ export default function Dashboard({
                 <strong>{user.name}</strong>
                 <span>{user.role || "User"}</span>
               </div>
-              <span>⌄</span>
             </div>
           </div>
         </header>
@@ -672,265 +749,393 @@ export default function Dashboard({
             <>
               <section className="dashboard-welcome">
                 <div>
-                  <p className="eyebrow">SATURDAY, 14 NOVEMBER 2026</p>
-                  <h1>Good afternoon, {user.name.split(" ")[0]}</h1>
+                  <p className="eyebrow">PROCUREMENT MANAGEMENT SYSTEM</p>
+                  <h1>Selamat datang, {user.name.split(" ")[0]}</h1>
                   <p>
-                    Berikut ringkasan aktivitas procurement perusahaan hari ini.
+                    Pantau aktivitas procurement, persediaan, dan transaksi
+                    perusahaan dalam satu dashboard.
                   </p>
                 </div>
 
                 <button
                   className="primary-action"
-                  onClick={
-                    // Membuka halaman pembuatan requisition.
-                    () => onNavigate("requisitions")
-                  }
+                  onClick={() => onNavigate("requisitions")}
                 >
-                  <span>＋</span> Create Requisition
+                  ＋ Buat Requisition
                 </button>
               </section>
 
-              <section className="stats-grid">
-                {stats.map(
-                  // Menampilkan setiap kartu statistik dashboard.
-                  (stat) => (
-                    <article className="stat-card" key={stat.label}>
+              {dashboardError && (
+                <div className="dashboard-error">{dashboardError}</div>
+              )}
+
+              <div className="dashboard-filter-row">
+                <div>
+                  <strong>Ringkasan Dashboard</strong>
+                  <span>Data berdasarkan database ProcurePro</span>
+                </div>
+
+                <select
+                  value={selectedYear}
+                  onChange={(event) =>
+                    setSelectedYear(Number(event.target.value))
+                  }
+                  aria-label="Pilih tahun dashboard"
+                >
+                  {[currentYear, currentYear - 1, currentYear - 2].map(
+                    (year) => (
+                      <option key={year} value={year}>
+                        Tahun {year}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+
+              {dashboardLoading ? (
+                <div className="dashboard-loading">
+                  Memuat data dashboard dari database...
+                </div>
+              ) : (
+                <>
+                  <section className="stats-grid">
+                    <article className="stat-card">
                       <div className="stat-card-top">
-                        <span>{stat.label}</span>
-                        <div className="stat-icon">{stat.icon}</div>
+                        <span>Total Procurement</span>
+                        <div className="stat-icon">◈</div>
                       </div>
-
-                      <h2>{stat.value}</h2>
-
+                      <h2>
+                        {formatCurrency(data.statistics.totalProcurement)}
+                      </h2>
                       <div className="stat-card-bottom">
-                        <span className="stat-change">{stat.change}</span>
-                        <span>vs last month</span>
+                        <span>Nilai PO tahun {selectedYear}</span>
                       </div>
                     </article>
-                  ),
-                )}
-              </section>
 
-              <section className="dashboard-middle-grid">
-                <article className="dashboard-panel spending-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h3>Procurement Overview</h3>
-                      <p>Monthly procurement spending</p>
-                    </div>
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Active Vendors</span>
+                        <div className="stat-icon">♙</div>
+                      </div>
+                      <h2>{formatNumber(data.statistics.activeVendors)}</h2>
+                      <div className="stat-card-bottom">
+                        <span>Vendor berstatus aktif</span>
+                      </div>
+                    </article>
 
-                    <select aria-label="Select period" defaultValue="2026">
-                      <option value="2026">Year 2026</option>
-                      <option value="2025">Year 2025</option>
-                    </select>
-                  </div>
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Pending Approvals</span>
+                        <div className="stat-icon">◷</div>
+                      </div>
+                      <h2>{formatNumber(data.statistics.pendingApprovals)}</h2>
+                      <div className="stat-card-bottom">
+                        <span>Menunggu persetujuan</span>
+                      </div>
+                    </article>
 
-                  <div className="spending-total">
-                    <strong>Rp 2.45 M</strong>
-                    <span>
-                      ↑ 12.8% <small>vs last year</small>
-                    </span>
-                  </div>
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Purchase Orders</span>
+                        <div className="stat-icon">▤</div>
+                      </div>
+                      <h2>
+                        {formatNumber(data.statistics.totalPurchaseOrders)}
+                      </h2>
+                      <div className="stat-card-bottom">
+                        <span>PO dibuat tahun {selectedYear}</span>
+                      </div>
+                    </article>
+                  </section>
 
-                  <div className="chart-area">
-                    <div className="chart-y-labels">
-                      <span>800 jt</span>
-                      <span>600 jt</span>
-                      <span>400 jt</span>
-                      <span>200 jt</span>
-                      <span>0</span>
-                    </div>
+                  <section className="dashboard-middle-grid">
+                    <article className="dashboard-panel spending-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h3>Procurement Overview</h3>
+                          <p>Nilai Purchase Order per bulan</p>
+                        </div>
+                      </div>
 
-                    <div className="chart-bars">
-                      {[38, 52, 44, 68, 56, 78, 62, 88, 70, 95, 76, 84].map(
-                        // Menggambar kolom grafik untuk setiap bulan.
-                        (height, index) => (
-                          <div className="chart-column" key={index}>
-                            <div
-                              className={`chart-bar ${
-                                index === 9 ? "highlight" : ""
-                              }`}
-                              style={{ height: `${height}%` }}
-                              title={`${height}%`}
-                            />
+                      <div className="spending-total">
+                        <strong>
+                          {formatCurrency(data.statistics.totalProcurement)}
+                        </strong>
+                        <span>Total tahun {selectedYear}</span>
+                      </div>
 
-                            <span>
-                              {
-                                [
-                                  "Jan",
-                                  "Feb",
-                                  "Mar",
-                                  "Apr",
-                                  "May",
-                                  "Jun",
-                                  "Jul",
-                                  "Aug",
-                                  "Sep",
-                                  "Oct",
-                                  "Nov",
-                                  "Dec",
-                                ][index]
-                              }
-                            </span>
+                      <div className="chart-area">
+                        <div className="chart-bars">
+                          {data.procurementChart.map((item) => (
+                            <div className="chart-column" key={item.month}>
+                              <div
+                                className="chart-bar"
+                                style={{
+                                  height: `${
+                                    item.amount === 0
+                                      ? 0
+                                      : Math.max(
+                                          4,
+                                          (item.amount / maxChartValue) * 100,
+                                        )
+                                  }%`,
+                                }}
+                                title={formatCurrency(item.amount)}
+                              />
+                              <span>{monthNames[item.month - 1]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </article>
+
+                    <article className="dashboard-panel status-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h3>Requisition Status</h3>
+                          <p>Status seluruh permintaan tahun {selectedYear}</p>
+                        </div>
+                      </div>
+
+                      <div className="status-total">
+                        <strong>{formatNumber(data.requisitions.total)}</strong>
+                        <span>Total Requisitions</span>
+                      </div>
+
+                      <div className="status-legend">
+                        {statusItems.map((item) => (
+                          <div key={item.label}>
+                            <i className={`legend-dot ${item.className}-dot`} />
+                            <span>{item.label}</span>
+                            <strong>{formatNumber(item.value)}</strong>
                           </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                </article>
+                        ))}
+                      </div>
 
-                <article className="dashboard-panel status-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h3>Requisition Status</h3>
-                      <p>Current request overview</p>
-                    </div>
-                    <button className="more-button" type="button">
-                      ···
-                    </button>
-                  </div>
+                      <button
+                        className="text-action"
+                        onClick={() => onNavigate("requisitions")}
+                      >
+                        Lihat semua requisition →
+                      </button>
+                    </article>
+                  </section>
 
-                  <div className="status-total">
-                    <strong>156</strong>
-                    <span>Total Requests</span>
-                  </div>
+                  <section className="stats-grid dashboard-secondary-stats">
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Total Inventory Items</span>
+                        <div className="stat-icon">▤</div>
+                      </div>
+                      <h2>{formatNumber(data.inventory.totalItems)}</h2>
+                      <div className="stat-card-bottom">
+                        <span>Barang aktif</span>
+                      </div>
+                    </article>
 
-                  <div className="status-progress">
-                    <div className="progress-track">
-                      <span className="progress-approved" />
-                      <span className="progress-pending" />
-                      <span className="progress-rejected" />
-                    </div>
-                  </div>
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Total Stock</span>
+                        <div className="stat-icon">▧</div>
+                      </div>
+                      <h2>{formatNumber(data.inventory.totalStock)}</h2>
+                      <div className="stat-card-bottom">
+                        <span>Akumulasi stok seluruh gudang</span>
+                      </div>
+                    </article>
 
-                  <div className="status-legend">
-                    <div>
-                      <i className="legend-dot approved-dot" />
-                      <span>Approved</span>
-                      <strong>98</strong>
-                    </div>
-                    <div>
-                      <i className="legend-dot pending-dot" />
-                      <span>Pending</span>
-                      <strong>42</strong>
-                    </div>
-                    <div>
-                      <i className="legend-dot rejected-dot" />
-                      <span>Rejected</span>
-                      <strong>16</strong>
-                    </div>
-                  </div>
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Low Stock Items</span>
+                        <div className="stat-icon">!</div>
+                      </div>
+                      <h2>{formatNumber(data.inventory.lowStockItems)}</h2>
+                      <div className="stat-card-bottom">
+                        <span>Barang mencapai stok minimum</span>
+                      </div>
+                    </article>
 
-                  <button
-                    className="text-action"
-                    onClick={
-                      // Membuka daftar requisition.
-                      () => onNavigate("requisitions")
-                    }
-                  >
-                    View all requisitions →
-                  </button>
-                </article>
-              </section>
+                    <article className="stat-card">
+                      <div className="stat-card-top">
+                        <span>Total Warehouses</span>
+                        <div className="stat-icon">▦</div>
+                      </div>
+                      <h2>{formatNumber(data.inventory.totalWarehouses)}</h2>
+                      <div className="stat-card-bottom">
+                        <span>Gudang aktif</span>
+                      </div>
+                    </article>
+                  </section>
 
-              <section className="dashboard-bottom-grid">
-                <article className="dashboard-panel orders-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h3>Recent Purchase Orders</h3>
-                      <p>Monitor your latest procurement transactions</p>
-                    </div>
+                  <section className="dashboard-middle-grid">
+                    <article className="dashboard-panel status-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h3>Invoice Overview</h3>
+                          <p>Status invoice tahun {selectedYear}</p>
+                        </div>
+                      </div>
 
-                    <button
-                      className="text-action"
-                      onClick={
-                        // Membuka daftar purchase order.
-                        () => onNavigate("purchase-orders")
-                      }
-                    >
-                      View all →
-                    </button>
-                  </div>
+                      <div className="status-total">
+                        <strong>{formatNumber(data.invoices.total)}</strong>
+                        <span>Total Invoices</span>
+                      </div>
 
-                  <div className="table-scroll">
-                    <table className="orders-table">
-                      <thead>
-                        <tr>
-                          <th>PO NUMBER</th>
-                          <th>VENDOR</th>
-                          <th>DATE</th>
-                          <th>AMOUNT</th>
-                          <th>STATUS</th>
-                        </tr>
-                      </thead>
+                      <div className="status-legend">
+                        <div>
+                          <i className="legend-dot draft-dot" />
+                          <span>Draft</span>
+                          <strong>{data.invoices.draft}</strong>
+                        </div>
+                        <div>
+                          <i className="legend-dot pending-dot" />
+                          <span>Pending</span>
+                          <strong>{data.invoices.pending}</strong>
+                        </div>
+                        <div>
+                          <i className="legend-dot approved-dot" />
+                          <span>Verified</span>
+                          <strong>{data.invoices.verified}</strong>
+                        </div>
+                        <div>
+                          <i className="legend-dot rejected-dot" />
+                          <span>Rejected</span>
+                          <strong>{data.invoices.rejected}</strong>
+                        </div>
+                        <div>
+                          <i className="legend-dot completed-dot" />
+                          <span>Paid</span>
+                          <strong>{data.invoices.paid}</strong>
+                        </div>
+                      </div>
 
-                      <tbody>
-                        {orders
-                          .filter(
-                            // Memilih pesanan yang cocok dengan kata kunci pencarian.
-                            (order) =>
-                              `${order.id} ${order.vendor} ${order.status}`
-                                .toLowerCase()
-                                .includes(search.toLowerCase()),
-                          )
-                          .map(
-                            // Menampilkan baris untuk setiap pesanan yang cocok.
-                            (order) => (
-                              <tr key={order.id}>
-                                <td className="order-id">{order.id}</td>
-                                <td>{order.vendor}</td>
-                                <td>{order.date}</td>
-                                <td className="order-amount">{order.amount}</td>
-                                <td>
-                                  <span
-                                    className={`order-status ${order.status.toLowerCase()}`}
-                                  >
-                                    <i />
-                                    {order.status}
-                                  </span>
+                      <button
+                        className="text-action"
+                        onClick={() => onNavigate("invoices")}
+                      >
+                        Lihat semua invoice →
+                      </button>
+                    </article>
+
+                    <article className="dashboard-panel status-panel invoice-total-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h3>Unpaid Invoices</h3>
+                          <p>Tagihan yang belum dibayar</p>
+                        </div>
+                      </div>
+                      <div className="status-total">
+                        <strong>
+                          {formatCurrency(data.invoices.unpaidAmount)}
+                        </strong>
+                        <span>{data.invoices.unpaid} invoice belum lunas</span>
+                      </div>
+                      <button
+                        className="text-action"
+                        onClick={() => onNavigate("invoices")}
+                      >
+                        Periksa invoice →
+                      </button>
+                    </article>
+                  </section>
+
+                  <section className="dashboard-bottom-grid">
+                    <article className="dashboard-panel orders-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h3>Recent Purchase Orders</h3>
+                          <p>Lima Purchase Order terbaru dari database</p>
+                        </div>
+                        <button
+                          className="text-action"
+                          onClick={() => onNavigate("purchase-orders")}
+                        >
+                          Lihat semua →
+                        </button>
+                      </div>
+
+                      <div className="table-scroll">
+                        <table className="orders-table">
+                          <thead>
+                            <tr>
+                              <th>PO NUMBER</th>
+                              <th>VENDOR</th>
+                              <th>DATE</th>
+                              <th>AMOUNT</th>
+                              <th>STATUS</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredOrders.length > 0 ? (
+                              filteredOrders.map((order) => (
+                                <tr key={order.id}>
+                                  <td className="order-id">{order.poNumber}</td>
+                                  <td>{order.vendor}</td>
+                                  <td>{formatDate(order.date)}</td>
+                                  <td className="order-amount">
+                                    {formatCurrency(order.amount)}
+                                  </td>
+                                  <td>
+                                    <span
+                                      className={`order-status ${getStatusClass(order.status)}`}
+                                    >
+                                      <i />
+                                      {order.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5}>
+                                  Tidak ada Purchase Order yang ditemukan.
                                 </td>
                               </tr>
-                            ),
-                          )}
-                      </tbody>
-                    </table>
-                  </div>
-                </article>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </article>
 
-                <article className="dashboard-panel activity-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h3>Recent Activity</h3>
-                      <p>Latest updates across workspace</p>
-                    </div>
-                    <button className="more-button" type="button">
-                      ···
-                    </button>
-                  </div>
-
-                  <div className="activity-list">
-                    {activities.map(
-                      // Menampilkan setiap aktivitas terbaru.
-                      (activity, index) => (
-                        <div className="activity-item" key={index}>
-                          <div className="activity-icon">{activity.icon}</div>
-                          <div className="activity-detail">
-                            <strong>{activity.title}</strong>
-                            <span>{activity.detail}</span>
-                            <small>{activity.time}</small>
-                          </div>
+                    <article className="dashboard-panel activity-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h3>Recent Activity</h3>
+                          <p>Aktivitas terbaru dari database</p>
                         </div>
-                      ),
-                    )}
-                  </div>
-                </article>
-              </section>
+                      </div>
+
+                      <div className="activity-list">
+                        {data.recentActivities.length > 0 ? (
+                          data.recentActivities.map((activity) => (
+                            <div className="activity-item" key={activity.id}>
+                              <div className="activity-icon">
+                                {getActivityIcon(activity.type)}
+                              </div>
+                              <div className="activity-detail">
+                                <strong>{activity.title}</strong>
+                                <span>{activity.detail}</span>
+                                {activity.actor && (
+                                  <span>Oleh: {activity.actor}</span>
+                                )}
+                                <small>
+                                  {formatRelativeTime(activity.createdAt)}
+                                </small>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p>Belum ada aktivitas.</p>
+                        )}
+                      </div>
+                    </article>
+                  </section>
+                </>
+              )}
 
               <footer className="dashboard-footer">
-                <span>© 2026 ProcurePro. All rights reserved.</span>
-                <span>
-                  Procurement Management System <i /> v1.0.0
-                </span>
+                <span>© {currentYear} ProcurePro. All rights reserved.</span>
+                <span>Procurement Management System · v1.0.0</span>
               </footer>
             </>
           )}

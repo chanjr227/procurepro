@@ -19,6 +19,7 @@ const invoiceRoutes = require("./src/routes/invoiceRoutes");
 const reportRoutes = require("./src/routes/reportRoutes");
 const userRoutes = require("./src/routes/userRoutes");
 const notificationRoutes = require("./src/routes/notificationRoutes");
+const dashboardRoutes = require("./src/routes/dashboardRoutes");
 
 // Menyiapkan aplikasi Express dan port layanan backend.
 const app = express();
@@ -57,6 +58,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Menyediakan endpoint informasi dasar untuk memeriksa server.
 app.get("/", (req, res) => {
