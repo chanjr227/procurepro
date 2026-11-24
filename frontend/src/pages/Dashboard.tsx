@@ -467,7 +467,6 @@ export default function Dashboard({
                 <div className="notification-dropdown">
                   <div className="notification-header">
                     <div>
-                      <h3>Notifikasi Stok</h3>
                       <h3>Notifikasi</h3>
                       <p>
                         {notificationSummary.totalAlerts + unreadCount}{" "}

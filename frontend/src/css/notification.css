@@ -285,3 +285,173 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+
+/* =========================================
+   PROCUREPRO - MODERN NOTIFICATION PANEL
+   ========================================= */
+
+.notification-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #e8edf3;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #526276;
+  transition: all 0.2s ease;
+}
+
+.notification-button:hover {
+  background: #eff9fb;
+  border-color: #b8e5ec;
+  color: #087f9e;
+  transform: translateY(-1px);
+}
+
+.notification-badge {
+  min-width: 20px;
+  height: 20px;
+  background: #e84b55;
+  box-shadow: 0 2px 6px rgba(232, 75, 85, 0.2);
+}
+
+.notification-dropdown {
+  width: 410px;
+  border: 1px solid #e7edf3;
+  border-radius: 15px;
+  box-shadow: 0 18px 55px rgba(16, 42, 54, 0.17);
+}
+
+.notification-header {
+  padding: 19px 20px;
+}
+
+.notification-header h3 {
+  font-size: 15px;
+  color: #172638;
+}
+
+.notification-header p {
+  font-size: 11px;
+  color: #8795a3;
+}
+
+.notification-close {
+  width: 29px;
+  height: 29px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.notification-close:hover {
+  background: #f1f5f9;
+  color: #26384b;
+}
+
+.notification-summary {
+  padding: 15px 20px;
+  gap: 12px;
+  background: #f7f9fc;
+}
+
+.notification-summary > div {
+  padding: 12px;
+  border: 1px solid #edf1f5;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.notification-summary strong {
+  font-size: 21px;
+  color: #172638;
+}
+
+.notification-summary span {
+  font-size: 10px;
+}
+
+.notification-list {
+  max-height: 380px;
+}
+
+.notification-item {
+  padding: 16px 19px;
+  gap: 12px;
+  transition: background 0.18s ease;
+}
+
+.notification-item:hover {
+  background: #f5f9fc;
+}
+
+.notification-status {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.notification-item-top > strong {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notification-item-content > p {
+  font-size: 11px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.notification-item-content > small {
+  font-size: 10px;
+  color: #98a5b4;
+}
+
+.app-notification-item {
+  border-left: 3px solid #2386d1;
+}
+
+.app-notification-item.is-unread {
+  background: #f0f7ff;
+}
+
+.app-notification-item.is-unread:hover {
+  background: #e8f2ff;
+}
+
+.app-notification-item.is-read {
+  opacity: 0.72;
+}
+
+.app-notification-item .notification-label.low-stock {
+  background: #e0efff;
+  color: #236bb1;
+}
+
+.notification-footer {
+  padding: 15px 19px;
+  background: #fbfcfe;
+}
+
+.notification-footer button {
+  color: #087f9e;
+  font-size: 11px;
+  transition: color 0.2s ease;
+}
+
+.notification-footer button:hover {
+  color: #045e77;
+}
+
+@media (max-width: 600px) {
+  .notification-dropdown {
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    width: calc(100vw - 24px);
+    max-width: none;
+    border-radius: 13px;
+  }
+
+  .notification-list {
+    max-height: min(55vh, 380px);
+  }
+}
